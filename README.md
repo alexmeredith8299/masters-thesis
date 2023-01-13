@@ -5,5 +5,5 @@ TODO: document with some setup instructions for training and testing.
 
 TODO: upload saved models used to generate the results in the thesis.
 
-![linter status](https://github.com/alexmeredith8299/masters-thesis/blob/master/badges/pylint.svg)
-![test status](https://github.com/alexmeredith8299/masters-thesis/blob/master/badges/pytest.svg)
+![linter status](https://github.com/alexmeredith8299/masters-thesis/blob/main/badges/pylint.svg)
+![test status](https://github.com/alexmeredith8299/masters-thesis/blob/main/badges/pytest.svg)
