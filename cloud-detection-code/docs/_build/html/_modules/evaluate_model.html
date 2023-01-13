@@ -1,0 +1,422 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>evaluate_model &#8212; SM Thesis 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">SM Thesis 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">evaluate_model</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for evaluate_model</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Evaluate performance of a Pytorch model</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">mlxtend.plotting</span> <span class="kn">import</span> <span class="n">plot_confusion_matrix</span>
+<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+
+<div class="viewcode-block" id="ClassifierValidator"><a class="viewcode-back" href="../index.html#evaluate_model.ClassifierValidator">[docs]</a><span class="k">class</span> <span class="nc">ClassifierValidator</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is used to evaluate the performance of a classifier.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">        classifier: torch.nn.Module</span>
+<span class="sd">            The classifier to evaluate.</span>
+<span class="sd">        test_set: torch.utils.DataLoader</span>
+<span class="sd">            The test set to evaluate the classifier on.</span>
+<span class="sd">        device: torch.device</span>
+<span class="sd">            The device to use for the classifier.</span>
+<span class="sd">        val_set: list </span>
+<span class="sd">            A list of dictionaries containing the images that the classifier </span>
+<span class="sd">             has been validated on.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">        classifier: torch.nn.Module</span>
+<span class="sd">            The classifier to evaluate.</span>
+<span class="sd">        device: torch.device</span>
+<span class="sd">            The device to use for the classifier.</span>
+<span class="sd">        to_validate: torch.utils.DataLoader</span>
+<span class="sd">            The set of images to validate the classifier on.</span>
+<span class="sd">        validated_set: list</span>
+<span class="sd">            A list of dictionaries containing the images that the classifier</span>
+<span class="sd">            has been validated on.</span>
+<span class="sd">        validation_categories: list</span>
+<span class="sd">            A list of the categories that the classifier has been validated on.</span>
+<span class="sd">        results_by_category: dict</span>
+<span class="sd">            A dictionary of the results by category.</span>
+<span class="sd">        false_pos: int</span>
+<span class="sd">            The number of false positives.</span>
+<span class="sd">        false_neg: int</span>
+<span class="sd">            The number of false negatives.</span>
+<span class="sd">        true_pos: int</span>
+<span class="sd">            The number of true positives.</span>
+<span class="sd">        true_neg: int</span>
+<span class="sd">            The number of true negatives.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">classifier</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">val_set</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">classifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_validate</span> <span class="o">=</span> <span class="n">test_set</span>
+        <span class="k">if</span> <span class="n">val_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validated_set</span> <span class="o">=</span> <span class="n">val_set</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validated_set</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validation_categories</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_validate</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validation_categories</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">false_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_neg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_neg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_by_category</span> <span class="o">=</span> <span class="p">{}</span>
+        
+<div class="viewcode-block" id="ClassifierValidator.validate_classifier"><a class="viewcode-back" href="../index.html#evaluate_model.ClassifierValidator.validate_classifier">[docs]</a>    <span class="k">def</span> <span class="nf">validate_classifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluates the classifier on the validation set and saves output to self.validated_set.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">            verbose: bool</span>
+<span class="sd">                If True, prints the progress of the validation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running classifier on validation set...&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_validate</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">classified_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="s1">&#39;img&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">classified_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="s1">&#39;img&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validated_set</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;img&#39;</span><span class="p">:</span> <span class="n">img</span><span class="p">[</span><span class="s1">&#39;img&#39;</span><span class="p">],</span> <span class="s1">&#39;ref&#39;</span><span class="p">:</span> <span class="n">img</span><span class="p">[</span><span class="s1">&#39;ref&#39;</span><span class="p">],</span> <span class="s1">&#39;classifier_result&#39;</span><span class="p">:</span> <span class="n">classified_mask</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="n">img</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]})</span></div>
+    
+<div class="viewcode-block" id="ClassifierValidator.evaluate_classifier"><a class="viewcode-back" href="../index.html#evaluate_model.ClassifierValidator.evaluate_classifier">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_classifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cloud_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">save_on</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluates the classifier given a cloud threshold.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">            cloud_threshold: float</span>
+<span class="sd">                The threshold for the classifier to classify as cloud.</span>
+<span class="sd">            save_on: bool</span>
+<span class="sd">                If True, saves the results to self.results_by_category.</span>
+<span class="sd">            verbose: bool</span>
+<span class="sd">                If True, prints the progress of the evaluation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            false_pos: int</span>
+<span class="sd">                The number of false positives.</span>
+<span class="sd">            false_neg: int</span>
+<span class="sd">                The number of false negatives.</span>
+<span class="sd">            true_pos: int</span>
+<span class="sd">                The number of true positives.</span>
+<span class="sd">            true_neg: int</span>
+<span class="sd">                The number of true negatives.</span>
+<span class="sd">            results_by_category: dict</span>
+<span class="sd">                A dictionary of the results by category.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Validate classifier on val set to get classifier output on test set</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">validated_set</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_classifier</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comparing classifier results to the reference mask with cloud_threshold=</span><span class="si">{</span><span class="n">cloud_threshold</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+
+        <span class="c1">#Loop over test set</span>
+        <span class="n">false_pos</span><span class="p">,</span> <span class="n">true_pos</span><span class="p">,</span> <span class="n">false_neg</span><span class="p">,</span> <span class="n">true_neg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="n">results_by_category</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">validated_set</span><span class="p">:</span>
+            <span class="c1">#Compare classifier result to reference mask</span>
+            <span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span> <span class="o">=</span> <span class="n">ClassifierValidator</span><span class="o">.</span><span class="n">compare_to_mask</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="s1">&#39;ref&#39;</span><span class="p">],</span> <span class="n">img</span><span class="p">[</span><span class="s1">&#39;classifier_result&#39;</span><span class="p">],</span> <span class="n">cloud_threshold</span><span class="p">)</span>
+            <span class="c1">#Update metrics</span>
+            <span class="n">false_pos</span> <span class="o">+=</span> <span class="n">fp</span>
+            <span class="n">false_neg</span> <span class="o">+=</span> <span class="n">fn</span>
+            <span class="n">true_pos</span> <span class="o">+=</span> <span class="n">tp</span>
+            <span class="n">true_neg</span> <span class="o">+=</span> <span class="n">tn</span>
+            <span class="k">if</span> <span class="n">img</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">results_by_category</span><span class="p">:</span>
+                <span class="n">results_by_category</span><span class="p">[</span><span class="n">img</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fp</span>
+                <span class="n">results_by_category</span><span class="p">[</span><span class="n">img</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fn</span>
+                <span class="n">results_by_category</span><span class="p">[</span><span class="n">img</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]][</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">tp</span>
+                <span class="n">results_by_category</span><span class="p">[</span><span class="n">img</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]][</span><span class="mi">3</span><span class="p">]</span> <span class="o">+=</span> <span class="n">tn</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">results_by_category</span><span class="p">[</span><span class="n">img</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tn</span><span class="p">]</span>
+
+        <span class="c1">#Save results</span>
+        <span class="k">if</span> <span class="n">save_on</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">false_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_neg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_neg</span> <span class="o">=</span> <span class="n">false_pos</span><span class="p">,</span> <span class="n">true_pos</span><span class="p">,</span> <span class="n">false_neg</span><span class="p">,</span> <span class="n">true_neg</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results_by_category</span> <span class="o">=</span> <span class="n">results_by_category</span>
+
+        <span class="k">return</span> <span class="n">false_pos</span><span class="p">,</span> <span class="n">false_neg</span><span class="p">,</span> <span class="n">true_pos</span><span class="p">,</span> <span class="n">true_neg</span><span class="p">,</span> <span class="n">results_by_category</span></div>
+        
+<div class="viewcode-block" id="ClassifierValidator.compare_to_mask"><a class="viewcode-back" href="../index.html#evaluate_model.ClassifierValidator.compare_to_mask">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">compare_to_mask</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">classifier_result</span><span class="p">,</span> <span class="n">cloud_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compares the classifier result to the reference mask.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">            ref: torch.Tensor</span>
+<span class="sd">                The reference mask.</span>
+<span class="sd">            classifier_result: torch.Tensor</span>
+<span class="sd">                The classifier result.</span>
+<span class="sd">            cloud_threshold: float</span>
+<span class="sd">                The threshold for the classifier to classify as cloud.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            metrics: tuple</span>
+<span class="sd">                A tuple of the form (false_pos, false_neg, true_pos, true_neg)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tn</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">shape</span> <span class="c1">#(inv dimension, channels, width, height)</span>
+
+        <span class="c1">#Vectorized for speed</span>
+        <span class="n">class_mask</span> <span class="o">=</span> <span class="n">classifier_result</span> <span class="o">&gt;=</span> <span class="n">cloud_threshold</span>
+        <span class="n">neg_mask</span> <span class="o">=</span> <span class="n">classifier_result</span> <span class="o">&lt;</span> <span class="n">cloud_threshold</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">class_mask</span> <span class="o">&gt;</span> <span class="n">ref</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="c1">#.item() converts tensor to int</span>
+        <span class="n">tp</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">class_mask</span><span class="p">)</span><span class="o">-</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">class_mask</span> <span class="o">&lt;</span> <span class="n">ref</span><span class="p">))</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="n">tn</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">neg_mask</span><span class="p">)</span> <span class="o">-</span> <span class="n">fn</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="ClassifierValidator.generate_confusion_matrix"><a class="viewcode-back" href="../index.html#evaluate_model.ClassifierValidator.generate_confusion_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">generate_confusion_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cloud_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">from_saved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plot_on</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a confusion matrix for the classifier given a cloud threshold.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">            cloud_threshold: float</span>
+<span class="sd">                The threshold for the classifier to classify as cloud.</span>
+<span class="sd">            category: str</span>
+<span class="sd">                The category to generate the confusion matrix for.</span>
+<span class="sd">            title: str</span>
+<span class="sd">                The title of the confusion matrix plot.</span>
+<span class="sd">            from_saved: bool</span>
+<span class="sd">                If True, uses the results from the last evaluation.</span>
+<span class="sd">            plot_on: bool</span>
+<span class="sd">                If True, plots the confusion matrix.</span>
+<span class="sd">            verbose: bool</span>
+<span class="sd">                If True, prints the progress of the evaluation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            confusion_matrix: np.array</span>
+<span class="sd">                The confusion matrix.</span>
+<span class="sd">            fig: matplotlib.pyplot.figure</span>
+<span class="sd">                The figure of the confusion matrix.</span>
+<span class="sd">            ax: matplotlib.pyplot.axes</span>
+<span class="sd">                The axes of the confusion matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Get results</span>
+        <span class="k">if</span> <span class="n">from_saved</span><span class="p">:</span>
+            <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">results_by_category</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_neg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_neg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_by_category</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">results_by_category</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_classifier</span><span class="p">(</span><span class="n">cloud_threshold</span><span class="p">)</span>
+
+        <span class="c1">#Narrow down on category if needed</span>
+        <span class="k">if</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">results_by_category</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plotting confusion matrix for data in the </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s2"> category...&quot;</span><span class="p">)</span>
+            <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tn</span><span class="p">]</span> <span class="o">=</span> <span class="n">results_by_category</span><span class="p">[</span><span class="n">category</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Plotting confusion matrix for all data...&quot;</span><span class="p">)</span>
+            
+        <span class="c1">#Generate confusion matrix</span>
+        <span class="n">confusion_table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">tn</span><span class="p">,</span> <span class="n">fp</span><span class="p">],</span>
+                   <span class="p">[</span><span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">]])</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">conf_mat</span><span class="o">=</span><span class="n">confusion_table</span><span class="p">,</span>
+                                        <span class="n">show_absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                        <span class="n">show_normed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                        <span class="n">colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                        <span class="n">class_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Not cloud&quot;</span><span class="p">,</span> <span class="s2">&quot;Cloud&quot;</span><span class="p">])</span>
+        <span class="c1">#Plot if needed</span>
+        <span class="k">if</span> <span class="n">plot_on</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.23</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Predicted&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;True&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="c1">#Return fig, ax for further use in addition to table</span>
+        <span class="k">return</span> <span class="n">confusion_table</span><span class="p">,</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+            
+<div class="viewcode-block" id="ClassifierValidator.generate_comparison_table"><a class="viewcode-back" href="../index.html#evaluate_model.ClassifierValidator.generate_comparison_table">[docs]</a>    <span class="k">def</span> <span class="nf">generate_comparison_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cloud_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a table of the results of the classifier.</span>
+
+<span class="sd">        Arguments </span>
+<span class="sd">        ---------</span>
+<span class="sd">            cloud_threshold: float</span>
+<span class="sd">                The threshold for the classifier to classify as cloud.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            table: str</span>
+<span class="sd">                A string representation of the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Evaluate classifier with appropriate threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_classifier</span><span class="p">(</span><span class="n">cloud_threshold</span><span class="p">,</span> <span class="n">save_on</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1">#For each category, parse results</span>
+        <span class="n">cats</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">total_fp</span><span class="p">,</span> <span class="n">total_fn</span><span class="p">,</span> <span class="n">total_tp</span><span class="p">,</span> <span class="n">total_tn</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">cat_result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_by_category</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">cat</span><span class="p">,</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tn</span><span class="p">]</span> <span class="o">=</span> <span class="n">cat_result</span> 
+            <span class="n">total_fp</span> <span class="o">+=</span> <span class="n">fp</span>
+            <span class="n">total_fn</span> <span class="o">+=</span> <span class="n">fn</span>
+            <span class="n">total_tp</span> <span class="o">+=</span> <span class="n">tp</span>
+            <span class="n">total_tn</span> <span class="o">+=</span> <span class="n">tn</span>
+            <span class="n">acc</span> <span class="o">=</span> <span class="p">(</span><span class="n">tn</span><span class="o">+</span><span class="n">tp</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mf">1.0</span><span class="o">*</span><span class="p">(</span><span class="n">fp</span><span class="o">+</span><span class="n">fn</span><span class="o">+</span><span class="n">tp</span><span class="o">+</span><span class="n">tn</span><span class="p">))</span>
+            <span class="n">sensitivity</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">tp</span><span class="o">+</span><span class="n">fn</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sensitivity</span> <span class="o">=</span> <span class="p">(</span><span class="n">tp</span><span class="o">/</span><span class="p">(</span><span class="n">tp</span><span class="o">+</span><span class="n">fn</span><span class="p">))</span>
+            <span class="n">specificity</span> <span class="o">=</span> <span class="p">(</span><span class="n">tn</span><span class="o">/</span><span class="p">(</span><span class="n">tn</span><span class="o">+</span><span class="n">fp</span><span class="p">))</span>
+            <span class="n">recall</span> <span class="o">=</span> <span class="n">sensitivity</span>
+            <span class="n">precision</span> <span class="o">=</span> <span class="p">(</span><span class="n">tp</span><span class="o">/</span><span class="p">(</span><span class="n">tp</span><span class="o">+</span><span class="n">fp</span><span class="p">))</span>
+            <span class="n">f1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">precision</span><span class="o">*</span><span class="n">recall</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">precision</span><span class="o">+</span><span class="n">recall</span><span class="p">)</span>
+            <span class="n">res_cat</span> <span class="o">=</span> <span class="p">[</span><span class="n">cat</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="n">sensitivity</span><span class="p">,</span> <span class="n">specificity</span><span class="p">,</span> <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">f1</span><span class="p">]</span>
+            <span class="n">cats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res_cat</span><span class="p">)</span>
+
+        <span class="c1">#Parse total results</span>
+        <span class="n">total_acc</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_tn</span><span class="o">+</span><span class="n">total_tp</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mf">1.0</span><span class="o">*</span><span class="p">(</span><span class="n">total_fp</span><span class="o">+</span><span class="n">total_fn</span><span class="o">+</span><span class="n">total_tp</span><span class="o">+</span><span class="n">total_tn</span><span class="p">))</span>
+        <span class="n">total_sensitivity</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">total_tp</span><span class="o">+</span><span class="n">total_fn</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">total_sensitivity</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_tp</span><span class="o">/</span><span class="p">(</span><span class="n">total_tp</span><span class="o">+</span><span class="n">total_fn</span><span class="p">))</span>
+        <span class="n">total_specificity</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_tn</span><span class="o">/</span><span class="p">(</span><span class="n">total_tn</span><span class="o">+</span><span class="n">total_fp</span><span class="p">))</span>
+        <span class="n">total_recall</span> <span class="o">=</span> <span class="n">total_sensitivity</span>
+        <span class="n">total_precision</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_tp</span><span class="o">/</span><span class="p">(</span><span class="n">total_tp</span><span class="o">+</span><span class="n">total_fp</span><span class="p">))</span>
+        <span class="n">total_f1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">total_precision</span><span class="o">*</span><span class="n">total_recall</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">total_precision</span><span class="o">+</span><span class="n">total_recall</span><span class="p">)</span>
+        <span class="n">total_res</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Total&quot;</span><span class="p">,</span> <span class="n">total_acc</span><span class="p">,</span> <span class="n">total_sensitivity</span><span class="p">,</span> <span class="n">total_specificity</span><span class="p">,</span> <span class="n">total_precision</span><span class="p">,</span> <span class="n">total_recall</span><span class="p">,</span> <span class="n">total_f1</span><span class="p">]</span>
+        <span class="n">cats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_res</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">cats</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Category&#39;</span><span class="p">,</span> <span class="s1">&#39;Acc&#39;</span><span class="p">,</span> <span class="s1">&#39;Sens&#39;</span><span class="p">,</span> <span class="s1">&#39;Spec&#39;</span><span class="p">,</span> <span class="s1">&#39;Precision&#39;</span><span class="p">,</span> <span class="s1">&#39;Recall&#39;</span><span class="p">,</span> <span class="s1">&#39;F1&#39;</span><span class="p">],</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">&#39;orgtbl&#39;</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="ClassifierValidator.generate_roc_curve"><a class="viewcode-back" href="../index.html#evaluate_model.ClassifierValidator.generate_roc_curve">[docs]</a>    <span class="k">def</span> <span class="nf">generate_roc_curve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roc_thresholds</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">plot_on</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">classifier_label</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a ROC curve for the classifier.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">            roc_thresholds: list</span>
+<span class="sd">                The thresholds to use for the ROC curve.</span>
+<span class="sd">            plot_on: bool</span>
+<span class="sd">                If True, plots the ROC curve.</span>
+<span class="sd">            title: str</span>
+<span class="sd">                The title of the ROC curve plot.</span>
+<span class="sd">            classifier_label: str</span>
+<span class="sd">                The label of the classifier in the plot legend.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            roc_fprates: list</span>
+<span class="sd">                The false positive rates for the ROC curve.</span>
+<span class="sd">            roc_tprates: list</span>
+<span class="sd">                The true positive rates for the ROC curve.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Evaluate classifier at each threshold</span>
+        <span class="n">thold_fps</span><span class="p">,</span> <span class="n">thold_fns</span><span class="p">,</span> <span class="n">thold_tps</span><span class="p">,</span> <span class="n">thold_tns</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">thold</span> <span class="ow">in</span> <span class="n">roc_thresholds</span><span class="p">:</span>
+            <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_classifier</span><span class="p">(</span><span class="n">thold</span><span class="p">,</span> <span class="n">save_on</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">thold_fps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+            <span class="n">thold_fns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            <span class="n">thold_tps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tp</span><span class="p">)</span>
+            <span class="n">thold_tns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tn</span><span class="p">)</span>
+
+        <span class="c1">#Calculate false and true positive rates at each threshold</span>
+        <span class="n">roc_tprates</span><span class="p">,</span> <span class="n">roc_fprates</span>  <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">thold_fps</span><span class="p">)):</span>
+            <span class="n">roc_fprates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">thold_fps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">thold_fps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">thold_tns</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">thold_fns</span><span class="p">)):</span>
+            <span class="n">roc_tprates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">thold_tps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">thold_fns</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">thold_tps</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+        <span class="c1">#Plot if needed</span>
+        <span class="k">if</span> <span class="n">plot_on</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">roc_fprates</span><span class="p">,</span> <span class="n">roc_tprates</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="s1">&#39;k--&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;False positive rate&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;True positive rate&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">classifier_label</span><span class="p">,</span> <span class="s2">&quot;Reference (y=x)&quot;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">roc_fprates</span><span class="p">,</span> <span class="n">roc_tprates</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">SM Thesis 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">evaluate_model</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Alex Meredith.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,997 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>basic_blocks &#8212; SM Thesis 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">SM Thesis 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">basic_blocks</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for basic_blocks</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module implements some basic blocks that are useful</span>
+<span class="sd">for C8-invariant and similarly flavored models.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">e2cnn</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">math</span> 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scripts.escnn_extension</span> <span class="kn">import</span> <span class="n">InteroperableR2Conv</span><span class="p">,</span> <span class="n">InteroperableBatchNorm</span>
+<span class="kn">from</span> <span class="nn">scripts.escnn_extension</span> <span class="kn">import</span> <span class="n">InteroperableMaxBlurPool</span><span class="p">,</span> <span class="n">InteroperableUpsample</span>
+<span class="kn">from</span> <span class="nn">scripts.escnn_extension</span> <span class="kn">import</span> <span class="n">InteroperableReLU</span>
+
+<div class="viewcode-block" id="SavableModule"><a class="viewcode-back" href="../index.html#basic_blocks.SavableModule">[docs]</a><span class="k">class</span> <span class="nc">SavableModule</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract extension of escnn.nn.EquivariantModule that allows for saving</span>
+<span class="sd">    and loading a model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type, gives invariant rep of block output</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type, gives invariant rep of block output</span>
+<span class="sd">        block: nn.SequentialModule</span>
+<span class="sd">            actual layers to use in forward method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SavableModule.forward"><a class="viewcode-back" href="../index.html#basic_blocks.SavableModule.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forward pass of SavableModule. Called during model evaluation and testing.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            x: escnn.nn.GeometricTensor</span>
+<span class="sd">                tensor with an invariant type given as input</span>
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">            out: escnn.nn.GeometricTensor</span>
+<span class="sd">                tensor with an invariant type given as output</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SavableModule.get_save_dict"><a class="viewcode-back" href="../index.html#basic_blocks.SavableModule.get_save_dict">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save properties of this module to a dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties in dict</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                properties of this module</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="SavableModule.load_from_dict"><a class="viewcode-back" href="../index.html#basic_blocks.SavableModule.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load this module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary containing properties</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            module: SavableModule</span>
+<span class="sd">                module implementing properties</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+<div class="viewcode-block" id="EquivariantSavableModule"><a class="viewcode-back" href="../index.html#basic_blocks.EquivariantSavableModule">[docs]</a><span class="k">class</span> <span class="nc">EquivariantSavableModule</span><span class="p">(</span><span class="n">SavableModule</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">EquivariantModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract extension of escnn.nn.EquivariantModule that allows for saving</span>
+<span class="sd">    and loading a model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type, gives invariant rep of block output</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type, gives invariant rep of block output</span>
+<span class="sd">        block: nn.SequentialModule</span>
+<span class="sd">            actual layers to use in forward method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="EquivariantSavableModule.evaluate_output_shape"><a class="viewcode-back" href="../index.html#basic_blocks.EquivariantSavableModule.evaluate_output_shape">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate output shape.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            input_shape: tuple</span>
+<span class="sd">                size-4 tuple (size of inv group, channels, x, y)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            output_shape: tuple</span>
+<span class="sd">                size-4 tuple (size of inv group, channels, x, y)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_type</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">out_shape</span></div>
+
+<div class="viewcode-block" id="EquivariantSavableModule.export"><a class="viewcode-back" href="../index.html#basic_blocks.EquivariantSavableModule.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exports this module to a torch.nn.Module.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">           module: torch.nn.Sequential</span>
+<span class="sd">                PyTorch version of this module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">export</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="EquivariantSavableModule.get_save_dict"><a class="viewcode-back" href="../index.html#basic_blocks.EquivariantSavableModule.get_save_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save properties of this module to a dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties in dict</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                properties of this module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prefix</span> <span class="c1">#Having &#39;.&#39; in prefix causes issues when loading from dict</span>
+
+        <span class="c1">#Save each layer</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">_modules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">layer_dict</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">get_save_dict</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">layer_key</span><span class="p">,</span> <span class="n">layer_val</span> <span class="ow">in</span> <span class="n">layer_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">properties</span><span class="p">[</span><span class="n">layer_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_val</span>
+
+        <span class="k">return</span> <span class="n">properties</span></div></div>
+
+<div class="viewcode-block" id="ActivationBlock"><a class="viewcode-back" href="../index.html#basic_blocks.ActivationBlock">[docs]</a><span class="k">class</span> <span class="nc">ActivationBlock</span><span class="p">(</span><span class="n">SavableModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This module represents a final 1x1 convolution, batchnorm, leaky ReLU, and sigmoid</span>
+<span class="sd">    activation which can be saved and loaded from a dictionary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">relu_slope</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">conv_stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">conv_padding</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relu_slope</span> <span class="o">=</span> <span class="n">relu_slope</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">conv_stride</span><span class="p">,</span> <span class="n">conv_padding</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">relu_slope</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">()</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ActivationBlock.get_save_dict"><a class="viewcode-back" href="../index.html#basic_blocks.ActivationBlock.get_save_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method saves all relevant properties of the ActivationBlock module</span>
+<span class="sd">        in a dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties in dict</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                contains properties to save to disk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1">#Save vals from state dict</span>
+        <span class="n">state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.2.slope&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu_slope</span>
+
+        <span class="k">return</span> <span class="n">properties</span></div>
+
+<div class="viewcode-block" id="ActivationBlock.load_from_dict"><a class="viewcode-back" href="../index.html#basic_blocks.ActivationBlock.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method loads an ActivationBlock module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary of properties for module</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            activation_module: ActivationBlock</span>
+<span class="sd">                module implementing those properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Get Conv2d + BatchNorm2d properties, and relu slope</span>
+        <span class="n">conv_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">bn_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">relu_slope</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+                <span class="n">conv_dict</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
+                <span class="n">bn_dict</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span><span class="s1">&#39;2&#39;</span><span class="p">:</span>
+                <span class="n">relu_slope</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1">#Form block</span>
+        <span class="n">conv</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">conv</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">conv_dict</span><span class="p">)</span>
+        <span class="n">batch_norm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">batch_norm</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">bn_dict</span><span class="p">)</span>
+
+        <span class="n">act</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">relu_slope</span><span class="o">=</span><span class="n">relu_slope</span><span class="p">)</span>
+
+        <span class="n">act</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+                <span class="n">conv</span><span class="p">,</span>
+                <span class="n">batch_norm</span><span class="p">,</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">relu_slope</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">act</span></div></div>
+
+
+
+<div class="viewcode-block" id="ReduceChannelDimsBlock"><a class="viewcode-back" href="../index.html#basic_blocks.ReduceChannelDimsBlock">[docs]</a><span class="k">class</span> <span class="nc">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">EquivariantSavableModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inherits from EquivariantSavableModule. Simple block that reduces channel</span>
+<span class="sd">    dimensionality.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type, gives invariant rep of block output</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type, gives invariant rep of block output</span>
+<span class="sd">        inplace: boolean</span>
+<span class="sd">            whether or not ReLU activation is inplace</span>
+<span class="sd">        block: nn.SequentialModule</span>
+<span class="sd">            actual layers to use in forward method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">inplace</span> <span class="o">=</span> <span class="n">inplace</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_type</span> <span class="o">=</span> <span class="n">in_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_type</span> <span class="o">=</span> <span class="n">out_type</span>
+
+        <span class="c1">#BN -&gt; ReLU -&gt; 1x1 conv to reduce # of channels</span>
+        <span class="n">reduce_channels_block</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SequentialModule</span><span class="p">(</span>
+                <span class="n">InteroperableBatchNorm</span><span class="p">(</span><span class="n">in_type</span><span class="p">),</span>
+                <span class="n">InteroperableReLU</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="n">InteroperableR2Conv</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">reduce_channels_block</span>
+
+<div class="viewcode-block" id="ReduceChannelDimsBlock.load_from_dict"><a class="viewcode-back" href="../index.html#basic_blocks.ReduceChannelDimsBlock.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load this module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary containing properties</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            reduce_module: ReduceChannelDimsBlock</span>
+<span class="sd">                module implementing properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Split up layer dictionaries</span>
+        <span class="n">bn_dict</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1">#0</span>
+        <span class="n">relu_dict</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1">#1</span>
+        <span class="n">conv_dict</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1">#2</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">bn_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">relu_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">conv_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1">#Load layers and form block</span>
+        <span class="n">bn_layer</span> <span class="o">=</span> <span class="n">InteroperableBatchNorm</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">bn_dict</span><span class="p">)</span>
+        <span class="n">relu_layer</span> <span class="o">=</span> <span class="n">InteroperableReLU</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">relu_dict</span><span class="p">)</span>
+        <span class="n">conv_layer</span> <span class="o">=</span> <span class="n">InteroperableR2Conv</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">conv_dict</span><span class="p">)</span>
+
+        <span class="n">block</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SequentialModule</span><span class="p">(</span><span class="n">bn_layer</span><span class="p">,</span> <span class="n">relu_layer</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">)</span>
+
+        <span class="c1">#Initialize and return ReduceChannelDimsBlock</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">bn_layer</span><span class="o">.</span><span class="n">in_type</span>
+        <span class="n">out_type</span> <span class="o">=</span> <span class="n">conv_layer</span><span class="o">.</span><span class="n">out_type</span>
+        <span class="n">inplace</span> <span class="o">=</span> <span class="n">relu_layer</span><span class="o">.</span><span class="n">_inplace</span>
+
+        <span class="n">reduce_module</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="n">reduce_module</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">block</span>
+
+        <span class="k">return</span> <span class="n">reduce_module</span></div></div>
+
+<div class="viewcode-block" id="DownscaleBlock"><a class="viewcode-back" href="../index.html#basic_blocks.DownscaleBlock">[docs]</a><span class="k">class</span> <span class="nc">DownscaleBlock</span><span class="p">(</span><span class="n">EquivariantSavableModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inherits from EquivariantSavableModule. Simple block that provides spatial</span>
+<span class="sd">    downscaling.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type, gives invariant rep of block output</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type, gives invariant rep of block output</span>
+<span class="sd">        block: nn.SequentialModule</span>
+<span class="sd">            actual layers to use in forward method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="n">in_type</span> <span class="o">==</span> <span class="n">out_type</span> <span class="c1">#in/out types are the same, only change is spatial</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_type</span> <span class="o">=</span> <span class="n">in_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_type</span> <span class="o">=</span> <span class="n">out_type</span>
+
+        <span class="c1">#Use PointwiseMaxPoolAntialiased to avoid aliasing. This does a pointwise max</span>
+        <span class="c1">#followed by blur pool</span>
+        <span class="n">downscale_block</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SequentialModule</span><span class="p">(</span>
+                <span class="n">InteroperableMaxBlurPool</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">downscale_block</span>
+
+<div class="viewcode-block" id="DownscaleBlock.load_from_dict"><a class="viewcode-back" href="../index.html#basic_blocks.DownscaleBlock.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load this module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary containing properties</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            downscale_module: DownscaleBlock</span>
+<span class="sd">                module implementing properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Only layer is max blur pool</span>
+        <span class="n">max_pool</span> <span class="o">=</span> <span class="n">InteroperableMaxBlurPool</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span>
+        <span class="n">downscale_block</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SequentialModule</span><span class="p">(</span><span class="n">max_pool</span><span class="p">)</span>
+
+        <span class="c1">#Get properties</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">downscale_block</span><span class="o">.</span><span class="n">in_type</span>
+        <span class="n">out_type</span> <span class="o">=</span> <span class="n">downscale_block</span><span class="o">.</span><span class="n">out_type</span>
+        <span class="n">kernel_size</span> <span class="o">=</span> <span class="n">max_pool</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">padding</span> <span class="o">=</span> <span class="n">max_pool</span><span class="o">.</span><span class="n">padding</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1">#Init + return</span>
+        <span class="n">downscale_module</span> <span class="o">=</span> <span class="n">DownscaleBlock</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">)</span>
+        <span class="n">downscale_module</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">downscale_block</span>
+
+        <span class="k">return</span> <span class="n">downscale_module</span></div></div>
+
+<div class="viewcode-block" id="UpscaleBlock"><a class="viewcode-back" href="../index.html#basic_blocks.UpscaleBlock">[docs]</a><span class="k">class</span> <span class="nc">UpscaleBlock</span><span class="p">(</span><span class="n">EquivariantSavableModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inherits from EqivariantSavableModule. Simple block that provides spatial</span>
+<span class="sd">    upsampling.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type, gives invariant rep of block output</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type, gives invariant rep of block output</span>
+<span class="sd">        block: nn.SequentialModule</span>
+<span class="sd">            actual layers to use in forward method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_type</span> <span class="o">=</span> <span class="n">in_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_type</span> <span class="o">=</span> <span class="n">out_type</span>
+        <span class="c1">#Wrapper on torch.nn.functional.interpolate()</span>
+        <span class="n">upscale_block</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SequentialModule</span><span class="p">(</span>
+                <span class="n">InteroperableUpsample</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="n">scale_factor</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">upscale_block</span>
+
+<div class="viewcode-block" id="UpscaleBlock.load_from_dict"><a class="viewcode-back" href="../index.html#basic_blocks.UpscaleBlock.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load this module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary containing properties</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            upscale_module: UpscaleBlock</span>
+<span class="sd">                module implementing properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Only layer is interp</span>
+        <span class="n">interp</span> <span class="o">=</span> <span class="n">InteroperableUpsample</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span>
+        <span class="n">upscale_block</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SequentialModule</span><span class="p">(</span><span class="n">interp</span><span class="p">)</span>
+
+        <span class="c1">#Get properties</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">upscale_block</span><span class="o">.</span><span class="n">in_type</span>
+        <span class="n">out_type</span> <span class="o">=</span> <span class="n">upscale_block</span><span class="o">.</span><span class="n">out_type</span>
+
+        <span class="c1">#Init + return</span>
+        <span class="n">upscale_module</span> <span class="o">=</span> <span class="n">UpscaleBlock</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">)</span>
+        <span class="n">upscale_module</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">upscale_block</span>
+
+        <span class="k">return</span> <span class="n">upscale_module</span></div></div>
+
+<span class="c1">#TODO can probably clean this up nicely</span>
+<div class="viewcode-block" id="EquivariantBasicConvBlock"><a class="viewcode-back" href="../index.html#basic_blocks.EquivariantBasicConvBlock">[docs]</a><span class="k">class</span> <span class="nc">EquivariantBasicConvBlock</span><span class="p">(</span><span class="n">EquivariantSavableModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inherits from EquivariantSavableModule. Describes a two-step basic block used in the</span>
+<span class="sd">    DenseBlock and C8InvariantCNN class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type of basic block EXCLUDING CONCATENATION to input. This is NOT the same as</span>
+<span class="sd">                the out_type attribute</span>
+<span class="sd">        out_to_in: int (optional)</span>
+<span class="sd">            ratio of # of channels in dense block output to # of channels in dense block</span>
+<span class="sd">                input (default is 2). May not be the same as out-to-in ratio of channels</span>
+<span class="sd">                for a specific EquivariantBasicConvBlock</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ------------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type of basic block, giving invariant rep/dims of block output</span>
+<span class="sd">        _layers: list</span>
+<span class="sd">            list of (name, escnn.nn.SequentialModule) pairs representing layers in order:</span>
+<span class="sd">                BN, ReLU, 1x1 Conv, BN, ReLU, 3x3 Conv</span>
+<span class="sd">        batch_norm: escnn.nn.InnerBatchNorm</span>
+<span class="sd">            batch norm layer performed on input</span>
+<span class="sd">        relu: escnn.nn.ReLu</span>
+<span class="sd">            relu layer prior to first convolutional layer</span>
+<span class="sd">        conv_1x1: InteroperableR2Conv</span>
+<span class="sd">            C8-invariant 1x1 convolutional layer done after first batch norm + ReLu</span>
+<span class="sd">        batch_norm_2: escnn.nn.InnerBatchNorm</span>
+<span class="sd">            batch norm layer on output of 1x1 convolution</span>
+<span class="sd">        relu_2: escnn.nn.ReLu</span>
+<span class="sd">            relu layer done on output of batch norm</span>
+<span class="sd">        conv_NxN: InteroperableR2Conv</span>
+<span class="sd">            final C8-invariant NxN convolutional layer to give output of basic block</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">out_to_in</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="n">kernel_size</span><span class="o">%</span><span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Kernel side length must be odd.&quot;</span>
+
+        <span class="c1">#Input and output type (output size is different due to concatenation)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_type</span> <span class="o">=</span> <span class="n">in_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">in_type</span><span class="o">.</span><span class="n">gspace</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">in_type</span><span class="o">.</span><span class="n">size</span><span class="o">+</span><span class="n">out_type</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">in_type</span><span class="o">.</span><span class="n">gspace</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_to_in</span> <span class="o">=</span> <span class="n">out_to_in</span>
+
+        <span class="c1">#Layers (in order)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_norm</span> <span class="o">=</span> <span class="n">InteroperableBatchNorm</span><span class="p">(</span><span class="n">in_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">InteroperableReLU</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">round</span><span class="p">(</span><span class="n">out_type</span><span class="o">.</span><span class="n">size</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">out_to_in</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Too few input channels&quot;</span>
+        <span class="n">reduce_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">in_type</span><span class="o">.</span><span class="n">gspace</span><span class="p">,</span>
+                <span class="nb">round</span><span class="p">(</span><span class="n">out_type</span><span class="o">.</span><span class="n">size</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">out_to_in</span><span class="p">))</span><span class="o">*</span><span class="p">[</span><span class="n">in_type</span><span class="o">.</span><span class="n">gspace</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_type</span> <span class="o">=</span> <span class="n">reduce_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_conv_type</span> <span class="o">=</span> <span class="n">out_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_1x1</span> <span class="o">=</span> <span class="n">InteroperableR2Conv</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">reduce_type</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_norm_2</span> <span class="o">=</span> <span class="n">InteroperableBatchNorm</span><span class="p">(</span><span class="n">reduce_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relu_2</span> <span class="o">=</span> <span class="n">InteroperableReLU</span><span class="p">(</span><span class="n">reduce_type</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_NxN</span> <span class="o">=</span> <span class="n">InteroperableR2Conv</span><span class="p">(</span><span class="n">reduce_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1">#Add layers to self._layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;BN1&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_norm</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;ReLU1&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;Conv1x1&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_1x1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;BN2&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_norm_2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;ReLU2&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu_2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;ConvNxN&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_NxN</span><span class="p">))</span>
+
+<div class="viewcode-block" id="EquivariantBasicConvBlock.forward"><a class="viewcode-back" href="../index.html#basic_blocks.EquivariantBasicConvBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the EquivariantBasicConvBlock forwards, putting an input tensor</span>
+<span class="sd">        through each layer (in order).</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            x: escnn.nn.GeometricTensor</span>
+<span class="sd">                tensor with an invariant type given as input</span>
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">            out: escnn.nn.GeometricTensor</span>
+<span class="sd">                tensor with an invariant type given as output</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">tensor_directsum</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="EquivariantBasicConvBlock.export"><a class="viewcode-back" href="../index.html#basic_blocks.EquivariantBasicConvBlock.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export this module to a normal PyTorch module and set to &quot;eval&quot; mode.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">            module: BasicConvBlock</span>
+<span class="sd">                torch export of this module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">exported_layers</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">:</span>
+            <span class="n">exported_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">export</span><span class="p">()))</span>
+
+        <span class="k">return</span> <span class="n">BasicConvBlock</span><span class="p">(</span><span class="n">exported_layers</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EquivariantBasicConvBlock.get_save_dict"><a class="viewcode-back" href="../index.html#basic_blocks.EquivariantBasicConvBlock.get_save_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save properties of this module to a dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties in dict</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                properties of this module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">:</span>
+            <span class="n">layer_dict</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get_save_dict</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">layer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">layer_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.out_to_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_to_in</span>
+
+        <span class="k">return</span> <span class="n">properties</span></div>
+
+<div class="viewcode-block" id="EquivariantBasicConvBlock.load_from_dict"><a class="viewcode-back" href="../index.html#basic_blocks.EquivariantBasicConvBlock.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load this module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary containing properties</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            basic_module: EquivariantBasicConvBlock</span>
+<span class="sd">                module implementing properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Get dictionaries with properties for each submodule</span>
+        <span class="n">relu_1_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">relu_2_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">bn_1_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">bn_2_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">conv1x1_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">convNxN_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">&quot;BN1&quot;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">bn_1_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;BN2&quot;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">bn_2_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;ReLU1&quot;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">relu_1_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;ReLU2&quot;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">relu_2_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;Conv1x1&quot;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">conv1x1_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;ConvNxN&quot;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">convNxN_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1">#Initialize first + last submodules</span>
+        <span class="n">relu_1</span> <span class="o">=</span> <span class="n">InteroperableReLU</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">relu_1_dict</span><span class="p">)</span>
+        <span class="n">conv_NxN</span> <span class="o">=</span> <span class="n">InteroperableR2Conv</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">convNxN_dict</span><span class="p">)</span>
+
+        <span class="c1">#Get in_type and out_type</span>
+        <span class="n">out_to_in</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;out_to_in&quot;</span><span class="p">:</span>
+                <span class="n">out_to_in</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1">#Create new EquivariantBasicConvBlock</span>
+        <span class="n">basic_module</span> <span class="o">=</span> <span class="n">EquivariantBasicConvBlock</span><span class="p">(</span><span class="n">relu_1</span><span class="o">.</span><span class="n">in_type</span><span class="p">,</span> <span class="n">conv_NxN</span><span class="o">.</span><span class="n">out_type</span><span class="p">,</span> <span class="n">out_to_in</span><span class="o">=</span><span class="n">out_to_in</span><span class="p">)</span>
+
+        <span class="c1">#Set properties appropriately (+ init remaining submodules)</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">batch_norm</span> <span class="o">=</span> <span class="n">InteroperableBatchNorm</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">bn_1_dict</span><span class="p">)</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">relu_1</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">conv_1x1</span> <span class="o">=</span> <span class="n">InteroperableR2Conv</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">conv1x1_dict</span><span class="p">)</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">batch_norm_2</span> <span class="o">=</span> <span class="n">InteroperableBatchNorm</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">bn_2_dict</span><span class="p">)</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">relu_2</span> <span class="o">=</span> <span class="n">InteroperableReLU</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">relu_2_dict</span><span class="p">)</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">conv_NxN</span> <span class="o">=</span> <span class="n">conv_NxN</span>
+
+        <span class="c1">#Add layers to self._layers</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">_layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;BN1&quot;</span><span class="p">,</span> <span class="n">basic_module</span><span class="o">.</span><span class="n">batch_norm</span><span class="p">))</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;ReLU1&quot;</span><span class="p">,</span> <span class="n">basic_module</span><span class="o">.</span><span class="n">relu</span><span class="p">))</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;Conv1x1&quot;</span><span class="p">,</span> <span class="n">basic_module</span><span class="o">.</span><span class="n">conv_1x1</span><span class="p">))</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;BN2&quot;</span><span class="p">,</span> <span class="n">basic_module</span><span class="o">.</span><span class="n">batch_norm_2</span><span class="p">))</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;ReLU2&quot;</span><span class="p">,</span> <span class="n">basic_module</span><span class="o">.</span><span class="n">relu_2</span><span class="p">))</span>
+        <span class="n">basic_module</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;ConvNxN&quot;</span><span class="p">,</span> <span class="n">basic_module</span><span class="o">.</span><span class="n">conv_NxN</span><span class="p">))</span>
+
+        <span class="c1">#Return</span>
+        <span class="k">return</span> <span class="n">basic_module</span></div></div>
+
+<div class="viewcode-block" id="BasicConvBlock"><a class="viewcode-back" href="../index.html#basic_blocks.BasicConvBlock">[docs]</a><span class="k">class</span> <span class="nc">BasicConvBlock</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inherits from torch.nn.Module. PyTorch wrapper on EquivariantBasicConvBlock.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">        layers: list</span>
+<span class="sd">            list of (name, layer) pairs where each layer is a torch.nn.Module</span>
+<span class="sd">            representing a layer in an EquivariantBasicConvBlock</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ------------</span>
+<span class="sd">        _layers: list</span>
+<span class="sd">            list of (name, layer) pairs where each layer is a torch.nn.Module</span>
+<span class="sd">            representing a layer in an EquivariantBasicConvBlock</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span> <span class="o">=</span> <span class="n">layers</span>
+
+<div class="viewcode-block" id="BasicConvBlock.forward"><a class="viewcode-back" href="../index.html#basic_blocks.BasicConvBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the model forward by running each layers in the EquivariantBasicConvBlock</span>
+<span class="sd">        sequentially, then concatenating the input to output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="TwoStepConvBlock"><a class="viewcode-back" href="../index.html#basic_blocks.TwoStepConvBlock">[docs]</a><span class="k">class</span> <span class="nc">TwoStepConvBlock</span><span class="p">(</span><span class="n">EquivariantSavableModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inherits from EquivariantSavableModule. Describes a two-step convolution </span>
+<span class="sd">    block used in the VanillaC8InvariantCNN class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">           input type, giving invariant representation and dims of block input </span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">              output type, giving invariant representation and dims of block output</span>
+<span class="sd">        kernel_size: int (optional)</span>
+<span class="sd">            size of convolution kernel</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ------------</span>
+<span class="sd">        block: e2cnn.nn.SequentialModule</span>
+<span class="sd">            implementation of the two-step convolution block</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_type</span> <span class="o">=</span> <span class="n">in_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_type</span> <span class="o">=</span> <span class="n">out_type</span>
+
+        <span class="c1">#BN -&gt; ReLU -&gt; Conv -&gt; BN -&gt; ReLU -&gt; Conv</span>
+        <span class="n">conv_block</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SequentialModule</span><span class="p">(</span>
+                <span class="n">InteroperableBatchNorm</span><span class="p">(</span><span class="n">in_type</span><span class="p">),</span> 
+                <span class="n">InteroperableReLU</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="n">InteroperableR2Conv</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="n">bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">),</span>
+                <span class="n">InteroperableBatchNorm</span><span class="p">(</span><span class="n">out_type</span><span class="p">),</span>
+                <span class="n">InteroperableReLU</span><span class="p">(</span><span class="n">out_type</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="n">InteroperableR2Conv</span><span class="p">(</span><span class="n">out_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="n">bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">conv_block</span>
+
+<div class="viewcode-block" id="TwoStepConvBlock.load_from_dict"><a class="viewcode-back" href="../index.html#basic_blocks.TwoStepConvBlock.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load this module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary containing properties</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            conv_module: TwoStepConvBlock</span>
+<span class="sd">                module implementing properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Get Conv2d + BatchNorm2d properties, and relu slope</span>
+        <span class="n">bn_dict_1</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">relu_dict_1</span> <span class="o">=</span> <span class="p">{}</span> 
+        <span class="n">conv_dict_1</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">bn_dict_2</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">relu_dict_2</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">conv_dict_2</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+                <span class="n">bn_dict_1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
+                <span class="n">relu_dict_1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span><span class="s1">&#39;2&#39;</span><span class="p">:</span>
+                <span class="n">conv_dict_1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;3&#39;</span><span class="p">:</span>
+                <span class="n">bn_dict_2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;4&#39;</span><span class="p">:</span>
+                <span class="n">relu_dict_2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span><span class="s1">&#39;5&#39;</span><span class="p">:</span>
+                <span class="n">conv_dict_2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1">#Load layers and form block</span>
+        <span class="n">bn_1</span> <span class="o">=</span> <span class="n">InteroperableBatchNorm</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">bn_dict_1</span><span class="p">)</span>
+        <span class="n">relu_1</span> <span class="o">=</span> <span class="n">InteroperableReLU</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">relu_dict_1</span><span class="p">)</span>
+        <span class="n">conv_1</span> <span class="o">=</span> <span class="n">InteroperableR2Conv</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">conv_dict_1</span><span class="p">)</span>
+        <span class="n">bn_2</span> <span class="o">=</span> <span class="n">InteroperableBatchNorm</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">bn_dict_2</span><span class="p">)</span>
+        <span class="n">relu_2</span> <span class="o">=</span> <span class="n">InteroperableReLU</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">relu_dict_2</span><span class="p">)</span>
+        <span class="n">conv_2</span> <span class="o">=</span> <span class="n">InteroperableR2Conv</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">conv_dict_2</span><span class="p">)</span>
+
+        <span class="n">block</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SequentialModule</span><span class="p">(</span><span class="n">bn_1</span><span class="p">,</span> <span class="n">relu_1</span><span class="p">,</span> <span class="n">conv_1</span><span class="p">,</span> <span class="n">bn_2</span><span class="p">,</span> 
+                <span class="n">relu_2</span><span class="p">,</span> <span class="n">conv_2</span><span class="p">)</span>
+
+        <span class="c1">#Initialize and return TwoStepConvBlock</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">bn_1</span><span class="o">.</span><span class="n">in_type</span>
+        <span class="n">out_type</span> <span class="o">=</span> <span class="n">conv_2</span><span class="o">.</span><span class="n">out_type</span>
+        <span class="n">kernel_size</span> <span class="o">=</span> <span class="n">conv_1</span><span class="o">.</span><span class="n">kernel_size</span>
+        <span class="n">bias</span> <span class="o">=</span> <span class="n">conv_1</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="n">two_step_conv_block</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span>
+                <span class="n">bias</span><span class="p">)</span>
+        <span class="n">two_step_conv_block</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">block</span>
+        <span class="k">return</span> <span class="n">two_step_conv_block</span></div></div>
+
+<div class="viewcode-block" id="DenseBlock"><a class="viewcode-back" href="../index.html#basic_blocks.DenseBlock">[docs]</a><span class="k">class</span> <span class="nc">DenseBlock</span><span class="p">(</span><span class="n">EquivariantSavableModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inherits from EquivariantSavableModule. Describes a dense block used in</span>
+<span class="sd">    the C8InvariantCNN class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">        in_type: escnn.nn.FieldType</span>
+<span class="sd">            input type of basic block, giving invariant representation of block input. Must have</span>
+<span class="sd">                fewer channels than out_type</span>
+<span class="sd">        out_type: escnn.nn.FieldType</span>
+<span class="sd">            output type of basic block, giving invariant rep/dims of block output</span>
+<span class="sd">        n_sub_blocks: int (optional)</span>
+<span class="sd">            number of sub-blocks in each dense block</span>
+<span class="sd">            default is 4</span>
+<span class="sd">        kernel_size: int (optional)</span>
+<span class="sd">            sidelength for non-1x1 convolution in EquivariantBasicConvBlock. default is 3</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    -----------</span>
+<span class="sd">        block: escnn.nn.SequentialModule</span>
+<span class="sd">            implementation of the DenseBlock</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">n_sub_blocks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1">#Assert # out channels &gt; # in channels</span>
+        <span class="k">assert</span> <span class="n">in_type</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">out_type</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>\
+            <span class="s2">&quot;DenseBlock must have more output channels than input channels&quot;</span>
+
+        <span class="c1">#Set attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_type</span> <span class="o">=</span> <span class="n">in_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_type</span> <span class="o">=</span> <span class="n">out_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_to_in</span> <span class="o">=</span> <span class="n">out_type</span><span class="o">.</span><span class="n">size</span><span class="o">/</span><span class="n">in_type</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_sub_blocks</span> <span class="o">=</span> <span class="n">n_sub_blocks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span>
+
+        <span class="n">inv_group</span> <span class="o">=</span> <span class="n">in_type</span><span class="o">.</span><span class="n">gspace</span>
+        <span class="n">raw_in_channels</span> <span class="o">=</span> <span class="n">in_type</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">basic_out_channels_no_concat</span> <span class="o">=</span> <span class="p">(</span><span class="n">out_type</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">raw_in_channels</span><span class="p">)</span><span class="o">/</span><span class="n">n_sub_blocks</span>
+
+        <span class="c1">#Assert that # of output channels (excluding concatenation) in each sub-block is an int</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">basic_out_channels_no_concat</span><span class="p">)</span>\
+                <span class="o">-</span> <span class="n">basic_out_channels_no_concat</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1e-9</span><span class="p">,</span>\
+                <span class="s2">&quot;Each sub-block of DenseBlock must have an integer number of channels&quot;</span>
+
+        <span class="c1">#Make layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_layer</span><span class="p">(</span><span class="n">n_sub_blocks</span><span class="p">,</span> <span class="n">raw_in_channels</span><span class="p">,</span>\
+                <span class="n">basic_out_channels_no_concat</span><span class="p">,</span> <span class="n">inv_group</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_make_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_sub_blocks</span><span class="p">,</span> <span class="n">raw_in_channels</span><span class="p">,</span> <span class="n">basic_out_channels_no_concat</span><span class="p">,</span> <span class="n">inv_group</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Actually builds the DenseBlock out of EquivariantBasicConvBlocks.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            n_sub_blocks: int</span>
+<span class="sd">                number of sub-blocks in each dense block</span>
+<span class="sd">            raw_in_channels: int</span>
+<span class="sd">                number of input channels into DenseBlock</span>
+<span class="sd">            basic_out_channels_no_concat: int</span>
+<span class="sd">                number of output channels of each sub-block (excluding concatenated input)</span>
+<span class="sd">            inv_group: escnn.gspaces.GSpace</span>
+<span class="sd">                space where the input signal lives</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">            layers: escnn.nn.SequentialModule</span>
+<span class="sd">                group equivariant sequential module that implements the DenseBlock</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#Make each of n sub blocks</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_sub_blocks</span><span class="p">):</span>
+            <span class="c1">#Get input and output channels for this specific EquivariantBasicConvBlock</span>
+            <span class="n">in_channels</span> <span class="o">=</span> <span class="n">raw_in_channels</span> <span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="n">basic_out_channels_no_concat</span>
+            <span class="n">out_channels</span> <span class="o">=</span> <span class="n">basic_out_channels_no_concat</span> <span class="c1">#Output of conv block WITHOUT concatenation</span>
+
+            <span class="c1">#Add EquivariantBasicConvBlock to layers</span>
+            <span class="n">in_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">inv_group</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">in_channels</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">inv_group</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+            <span class="n">out_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">inv_group</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">out_channels</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">inv_group</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+            <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">EquivariantBasicConvBlock</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">out_to_in</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">out_to_in</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">SequentialModule</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DenseBlock.load_from_dict"><a class="viewcode-back" href="../index.html#basic_blocks.DenseBlock.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load this module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary containing properties</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            basic_module: DenseBlock</span>
+<span class="sd">                module implementing properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Get number of sub blocks</span>
+        <span class="n">num_sub_blocks</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">num_sub_blocks</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">num_sub_blocks</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="c1">#Load each sub block</span>
+        <span class="n">modules</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_sub_blocks</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">i_dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="n">i</span><span class="p">:</span>
+                    <span class="n">i_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">i_module</span> <span class="o">=</span> <span class="n">EquivariantBasicConvBlock</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">i_dict</span><span class="p">)</span>
+            <span class="n">modules</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i_module</span><span class="p">)</span>
+
+        <span class="c1">#Get input type and output type of dense block</span>
+        <span class="n">out_type</span> <span class="o">=</span> <span class="n">modules</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">out_type</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">modules</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">in_type</span>
+
+        <span class="c1">#Initialize DenseBlock and its layers, and return</span>
+        <span class="n">dense_block</span> <span class="o">=</span> <span class="n">DenseBlock</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">n_sub_blocks</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">modules</span><span class="p">))</span>
+        <span class="n">dense_block</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SequentialModule</span><span class="p">(</span><span class="o">*</span><span class="n">modules</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dense_block</span></div></div>
+
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">SM Thesis 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">basic_blocks</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Alex Meredith.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

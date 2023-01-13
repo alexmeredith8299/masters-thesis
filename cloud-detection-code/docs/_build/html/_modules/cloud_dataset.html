@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>cloud_dataset &#8212; SM Thesis 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">SM Thesis 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">cloud_dataset</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cloud_dataset</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module creates a dataset for detecting clouds with PyTorch models.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">import</span> <span class="nn">torchvision.transforms.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">torchvision.transforms</span> <span class="kn">import</span> <span class="n">ToTensor</span>
+<span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">transforms</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+
+<div class="viewcode-block" id="CloudDataset"><a class="viewcode-back" href="../index.html#cloud_dataset.CloudDataset">[docs]</a><span class="k">class</span> <span class="nc">CloudDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for torch.utils.data.Dataset that can randomly flip, shuffle,</span>
+<span class="sd">    and resize images for use in PyTorch models.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">        root: string</span>
+<span class="sd">            filepath to directory containing folder with images</span>
+<span class="sd">        folder: string</span>
+<span class="sd">            name of folder containing images</span>
+<span class="sd">        filenames: list (optional)</span>
+<span class="sd">            list of filenames</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ------------</span>
+<span class="sd">        root: string</span>
+<span class="sd">            filepath to directory containing folder with images</span>
+<span class="sd">        dataset_folder: string</span>
+<span class="sd">            full path (incl. folder name) to images</span>
+<span class="sd">        images_list: list</span>
+<span class="sd">            list of filenames of images in dataset_folder</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">use_lwir</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_swir</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">randomly_flip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filenames</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_lwir</span> <span class="o">=</span> <span class="n">use_lwir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_swir</span> <span class="o">=</span> <span class="n">use_swir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">randomly_flip_samples</span> <span class="o">=</span> <span class="n">randomly_flip</span>
+
+        <span class="k">if</span> <span class="n">filenames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">images_list</span> <span class="o">=</span> <span class="n">filenames</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">folder</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_folder</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset_folder</span> <span class="o">=</span>  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">folder</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">images_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_folder</span><span class="p">)]))</span>
+        <span class="c1">#Sort filenames so images are deterministically ordered</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">images_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return number of images in dataset.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">            int</span>
+<span class="sd">                number of images in datase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images_list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CloudDataset.get_k_folds"><a class="viewcode-back" href="../index.html#cloud_dataset.CloudDataset.get_k_folds">[docs]</a>    <span class="k">def</span> <span class="nf">get_k_folds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k_folds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Break dataset into k subsets and return a list of subsets, for k-fold cross-validation.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            k_folds: int</span>
+<span class="sd">                number of folds</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            sets: list</span>
+<span class="sd">                list of k lists containing strings representing image filenames</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k_folds</span><span class="p">):</span>
+            <span class="n">kth_filenames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">images_list</span><span class="p">[</span><span class="n">k</span> <span class="o">*</span>
+                <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">//</span><span class="n">k_folds</span><span class="p">):</span> <span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">//</span><span class="n">k_folds</span><span class="p">)</span> <span class="p">]</span>
+            <span class="n">sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CloudDataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_folder</span><span class="p">,</span> <span class="n">filenames</span><span class="o">=</span><span class="n">kth_filenames</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">sets</span></div>
+
+<div class="viewcode-block" id="CloudDataset.randomly_flip"><a class="viewcode-back" href="../index.html#cloud_dataset.CloudDataset.randomly_flip">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">randomly_flip</span><span class="p">(</span><span class="n">rgb_img</span><span class="p">,</span> <span class="n">ir_img</span><span class="p">,</span> <span class="n">swir_img</span><span class="p">,</span> <span class="n">ref</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Randomly flip an image horizontally and/or vertically (probability 0.5</span>
+<span class="sd">        for horizontal flip, and probability</span>
+<span class="sd">        0.5 for vertical flip, independent of each other).</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            rgb_img: np array</span>
+<span class="sd">                np array representing an RGB image</span>
+<span class="sd">            ir_img: np array</span>
+<span class="sd">                np array representing an IR image (corresponds to rgb_img)</span>
+<span class="sd">            swir_img: np array</span>
+<span class="sd">                np array representing an SWIR image (corresponds to rgb_img)</span>
+<span class="sd">            ref: np array</span>
+<span class="sd">                np array representing a cloud mask corresponding to rgb_img and ir_img</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ------</span>
+<span class="sd">            rgb_img: np array</span>
+<span class="sd">                RGB image (randomly flipped)</span>
+<span class="sd">            ir_img: np array</span>
+<span class="sd">                IR image (randomly flipped, same flips as RGB image)</span>
+<span class="sd">            swir_img: np array</span>
+<span class="sd">                SWIR image (randomly flipped, same flips as RGB image)</span>
+<span class="sd">            ref: np array</span>
+<span class="sd">                reference cloud mask (undergone same transformations as rgb_img and ir_img</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        rgb_img = F.to_tensor(rgb_img)</span>
+<span class="sd">        ir_img = F.to_tensor(ir_img)</span>
+<span class="sd">        swir_img = F.to_tensor(swir_img)</span>
+<span class="sd">        ref = F.to_tensor(ref)</span>
+
+<span class="sd">        rgb_img = F.center_crop(rgb_img, 256)</span>
+<span class="sd">        ir_img = F.center_crop(ir_img, 256)</span>
+<span class="sd">        swir_img = F.center_crop(swir_img, 256)</span>
+<span class="sd">        ref = F.center_crop(ref, 256)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Random horizontal flipping</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="n">rgb_img</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">hflip</span><span class="p">(</span><span class="n">rgb_img</span><span class="p">)</span>
+            <span class="n">ir_img</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">hflip</span><span class="p">(</span><span class="n">ir_img</span><span class="p">)</span>
+            <span class="n">swir_img</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">hflip</span><span class="p">(</span><span class="n">swir_img</span><span class="p">)</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">hflip</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+        <span class="c1"># Random vertical flipping</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="n">rgb_img</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">vflip</span><span class="p">(</span><span class="n">rgb_img</span><span class="p">)</span>
+            <span class="n">ir_img</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">vflip</span><span class="p">(</span><span class="n">ir_img</span><span class="p">)</span>
+            <span class="n">swir_img</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">vflip</span><span class="p">(</span><span class="n">swir_img</span><span class="p">)</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">vflip</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rgb_img</span><span class="p">,</span> <span class="n">ir_img</span><span class="p">,</span> <span class="n">swir_img</span><span class="p">,</span> <span class="n">ref</span></div>
+
+<div class="viewcode-block" id="CloudDataset.resize"><a class="viewcode-back" href="../index.html#cloud_dataset.CloudDataset.resize">[docs]</a>    <span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span>  <span class="n">size</span><span class="o">=</span><span class="mi">144</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resize an image (RGB image, IR image, and corresponding cloud mask).</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            img: np array</span>
+<span class="sd">                np array representing an image</span>
+<span class="sd">            size: int (optional)</span>
+<span class="sd">                size to crop image sidelength to, default is 144</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">            img: np array</span>
+<span class="sd">                np array representing an image (resized)</span>
+<span class="sd">       &quot;&quot;&quot;</span>
+        <span class="n">top</span><span class="p">,</span> <span class="n">left</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">randomly_flip_samples</span><span class="p">:</span>
+            <span class="n">top</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">size</span><span class="p">)</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CloudDataset.shuffle"><a class="viewcode-back" href="../index.html#cloud_dataset.CloudDataset.shuffle">[docs]</a>    <span class="k">def</span> <span class="nf">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Shuffle order of images in self.images_list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images_list</span><span class="p">)</span></div>
+
+
+    <span class="c1"># returns both raw and validation</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get image from self.images_list for training or testing a PyTorch model.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            idx: int</span>
+<span class="sd">                index of image to get from self.images_list</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">            sample: dictionary</span>
+<span class="sd">                dictionary where &#39;img&#39; maps to np array with image, &#39;ref&#39; maps</span>
+<span class="sd">                to np array with mask, &#39;category&#39; maps to string with image</span>
+<span class="sd">                scene type (e.g. snow, ocean, etc)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">trainimage_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">images_list</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="n">trainimage_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">convert_tensor</span> <span class="o">=</span> <span class="n">ToTensor</span><span class="p">()</span>
+
+        <span class="n">rgbimg_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trainimage_name</span><span class="si">}</span><span class="s2">_rgb.tif&quot;</span>
+        <span class="n">irimg_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trainimage_name</span><span class="si">}</span><span class="s2">_lwir.tif&quot;</span>
+        <span class="n">swirimg_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trainimage_name</span><span class="si">}</span><span class="s2">_swir.tif&quot;</span>
+        <span class="n">ref_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trainimage_name</span><span class="si">}</span><span class="s2">_ref.tif&quot;</span>
+
+        <span class="n">rgb_img</span> <span class="o">=</span> <span class="n">convert_tensor</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_folder</span><span class="p">,</span> <span class="n">rgbimg_name</span><span class="p">)))</span>
+        <span class="n">refmask</span> <span class="o">=</span> <span class="n">convert_tensor</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_folder</span><span class="p">,</span> <span class="n">ref_name</span><span class="p">)))</span>
+        <span class="n">ir_img</span> <span class="o">=</span> <span class="n">convert_tensor</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_folder</span><span class="p">,</span> <span class="n">irimg_name</span><span class="p">)))</span>
+        <span class="n">swir_img</span> <span class="o">=</span> <span class="n">convert_tensor</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_folder</span><span class="p">,</span> <span class="n">swirimg_name</span><span class="p">)))</span>
+
+        <span class="n">rgb_img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">rgb_img</span><span class="p">)</span>
+        <span class="n">refmask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">refmask</span><span class="p">)</span>
+        <span class="n">ir_img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">ir_img</span><span class="p">)</span>
+        <span class="n">swir_img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">swir_img</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">randomly_flip_samples</span><span class="p">:</span>
+            <span class="n">rgb_img</span><span class="p">,</span> <span class="n">ir_img</span><span class="p">,</span> <span class="n">swir_img</span><span class="p">,</span> <span class="n">refmask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">randomly_flip</span><span class="p">(</span><span class="n">rgb_img</span><span class="p">,</span> <span class="n">ir_img</span><span class="p">,</span> <span class="n">swir_img</span><span class="p">,</span> <span class="n">refmask</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_lwir</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_swir</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">rgb_img</span><span class="p">,</span> <span class="n">ir_img</span><span class="p">,</span> <span class="n">swir_img</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_lwir</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">rgb_img</span><span class="p">,</span> <span class="n">ir_img</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_swir</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">rgb_img</span><span class="p">,</span> <span class="n">swir_img</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">rgb_img</span>
+
+        <span class="n">sample</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;img&#39;</span><span class="p">:</span> <span class="n">img</span><span class="p">,</span> <span class="s1">&#39;ref&#39;</span><span class="p">:</span> <span class="n">refmask</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="n">category</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">sample</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">SM Thesis 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">cloud_dataset</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Alex Meredith.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

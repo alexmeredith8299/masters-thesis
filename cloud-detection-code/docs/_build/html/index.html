@@ -1,0 +1,1974 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Welcome to Alex Meredith’s SM Thesis’s documentation! &#8212; SM Thesis 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">SM Thesis 0.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Welcome to Alex Meredith’s SM Thesis’s documentation!</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="welcome-to-alex-meredith-s-sm-thesis-s-documentation">
+<h1>Welcome to Alex Meredith’s SM Thesis’s documentation!<a class="headerlink" href="#welcome-to-alex-meredith-s-sm-thesis-s-documentation" title="Permalink to this headline">¶</a></h1>
+<section id="module-cloud_dataset">
+<span id="clouddataset"></span><h2>CloudDataset<a class="headerlink" href="#module-cloud_dataset" title="Permalink to this headline">¶</a></h2>
+<p>This module creates a dataset for detecting clouds with PyTorch models.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="cloud_dataset.CloudDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cloud_dataset.</span></span><span class="sig-name descname"><span class="pre">CloudDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_lwir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_swir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">randomly_flip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloud_dataset.html#CloudDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cloud_dataset.CloudDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.dataset.Dataset</span></code></p>
+<p>Wrapper for torch.utils.data.Dataset that can randomly flip, shuffle,
+and resize images for use in PyTorch models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>root</strong> (<em>string</em>) – filepath to directory containing folder with images</p></li>
+<li><p><strong>folder</strong> (<em>string</em>) – name of folder containing images</p></li>
+<li><p><strong>filenames</strong> (<em>list</em><em> (</em><em>optional</em><em>)</em>) – list of filenames</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cloud_dataset.CloudDataset.root">
+<span class="sig-name descname"><span class="pre">root</span></span><a class="headerlink" href="#cloud_dataset.CloudDataset.root" title="Permalink to this definition">¶</a></dt>
+<dd><p>filepath to directory containing folder with images</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cloud_dataset.CloudDataset.dataset_folder">
+<span class="sig-name descname"><span class="pre">dataset_folder</span></span><a class="headerlink" href="#cloud_dataset.CloudDataset.dataset_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>full path (incl. folder name) to images</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cloud_dataset.CloudDataset.images_list">
+<span class="sig-name descname"><span class="pre">images_list</span></span><a class="headerlink" href="#cloud_dataset.CloudDataset.images_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of filenames of images in dataset_folder</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cloud_dataset.CloudDataset.get_k_folds">
+<span class="sig-name descname"><span class="pre">get_k_folds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k_folds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloud_dataset.html#CloudDataset.get_k_folds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cloud_dataset.CloudDataset.get_k_folds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Break dataset into k subsets and return a list of subsets, for k-fold cross-validation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>k_folds</strong> (<em>int</em>) – number of folds</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sets</strong> – list of k lists containing strings representing image filenames</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cloud_dataset.CloudDataset.randomly_flip">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">randomly_flip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb_img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ir_img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">swir_img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloud_dataset.html#CloudDataset.randomly_flip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cloud_dataset.CloudDataset.randomly_flip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly flip an image horizontally and/or vertically (probability 0.5
+for horizontal flip, and probability
+0.5 for vertical flip, independent of each other).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rgb_img</strong> (<em>np array</em>) – np array representing an RGB image</p></li>
+<li><p><strong>ir_img</strong> (<em>np array</em>) – np array representing an IR image (corresponds to rgb_img)</p></li>
+<li><p><strong>swir_img</strong> (<em>np array</em>) – np array representing an SWIR image (corresponds to rgb_img)</p></li>
+<li><p><strong>ref</strong> (<em>np array</em>) – np array representing a cloud mask corresponding to rgb_img and ir_img</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>rgb_img</strong> (<em>np array</em>) – RGB image (randomly flipped)</p></li>
+<li><p><strong>ir_img</strong> (<em>np array</em>) – IR image (randomly flipped, same flips as RGB image)</p></li>
+<li><p><strong>swir_img</strong> (<em>np array</em>) – SWIR image (randomly flipped, same flips as RGB image)</p></li>
+<li><p><strong>ref</strong> (<em>np array</em>) – reference cloud mask (undergone same transformations as rgb_img and ir_img</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cloud_dataset.CloudDataset.resize">
+<span class="sig-name descname"><span class="pre">resize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">144</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloud_dataset.html#CloudDataset.resize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cloud_dataset.CloudDataset.resize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resize an image (RGB image, IR image, and corresponding cloud mask).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>np array</em>) – np array representing an image</p></li>
+<li><p><strong>size</strong> (<em>int</em><em> (</em><em>optional</em><em>)</em>) – size to crop image sidelength to, default is 144</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>img</strong> – np array representing an image (resized)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cloud_dataset.CloudDataset.shuffle">
+<span class="sig-name descname"><span class="pre">shuffle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloud_dataset.html#CloudDataset.shuffle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cloud_dataset.CloudDataset.shuffle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shuffle order of images in self.images_list</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-c8_invariant_cnn">
+<span id="c8-invariant-cnn"></span><h2>C8 Invariant CNN<a class="headerlink" href="#module-c8_invariant_cnn" title="Permalink to this headline">¶</a></h2>
+<p>This module implements an E(8)-equivariant steerable CNN as described in General E(2)-Equivariant
+Steerable CNNs (Weiler &amp; Cesa 2019).</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="c8_invariant_cnn.AbstractC8InvariantCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">c8_invariant_cnn.</span></span><span class="sig-name descname"><span class="pre">AbstractC8InvariantCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#AbstractC8InvariantCNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.AbstractC8InvariantCNN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Abstract implementation of a C8-invariant CNN that is savable and loadable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kernel_size</strong> (<em>int</em>) – side length of convolutions in conv blocks (default=3)</p></li>
+<li><p><strong>input_channels</strong> (<em>int</em>) – number of input channels (default=4)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="c8_invariant_cnn.AbstractC8InvariantCNN.downscale">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">downscale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#AbstractC8InvariantCNN.downscale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.AbstractC8InvariantCNN.downscale" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a “downscaling block” that reduces the dimensions of an
+input tensor through pooling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>in_type</strong> (<em>escnn.nn.FieldType</em>) – input type of dense block, giving invariant representation of block input</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>downscale_block</strong> – module that downscales an input tensor</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#basic_blocks.DownscaleBlock" title="basic_blocks.DownscaleBlock">DownscaleBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="c8_invariant_cnn.AbstractC8InvariantCNN.forward">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#AbstractC8InvariantCNN.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.AbstractC8InvariantCNN.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forward pass of the CNN. Called during model evaluation and testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>escnn.nn.GeometricTensor</em>) – tensor with an invariant type given as input</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>out</strong> – tensor with an invariant type given as output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>escnn.nn.GeometricTensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="c8_invariant_cnn.AbstractC8InvariantCNN.get_invariant_input_type">
+<span class="sig-name descname"><span class="pre">get_invariant_input_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#AbstractC8InvariantCNN.get_invariant_input_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.AbstractC8InvariantCNN.get_invariant_input_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets an escnn.nn.FieldType corresponding to an invariant representation of a CNN
+with a given number of channels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>channels</strong> (<em>int</em>) – number of channels for input to next layer</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>input to next layer</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="c8_invariant_cnn.AbstractC8InvariantCNN.get_save_dict">
+<span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#AbstractC8InvariantCNN.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.AbstractC8InvariantCNN.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save properties of this module to a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties in dict</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – properties of this module</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="c8_invariant_cnn.AbstractC8InvariantCNN.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#AbstractC8InvariantCNN.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.AbstractC8InvariantCNN.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load this module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary containing properties</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>module</strong> – module implementing properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#c8_invariant_cnn.C8InvariantCNN" title="c8_invariant_cnn.C8InvariantCNN">C8InvariantCNN</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="c8_invariant_cnn.AbstractC8InvariantCNN.reload_from_dict">
+<span class="sig-name descname"><span class="pre">reload_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#AbstractC8InvariantCNN.reload_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.AbstractC8InvariantCNN.reload_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load this module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary containing properties</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="c8_invariant_cnn.AbstractC8InvariantCNN.state_dict">
+<span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#AbstractC8InvariantCNN.state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.AbstractC8InvariantCNN.state_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save properties of this module to a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties in dict</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – properties of this module</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="c8_invariant_cnn.AbstractC8InvariantCNN.upscale">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">upscale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#AbstractC8InvariantCNN.upscale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.AbstractC8InvariantCNN.upscale" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns an “upscaling block” that increases the dimensions of an
+input tensor through upsampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>in_type</strong> (<em>escnn.nn.FieldType</em>) – input type of dense block, giving invariant representation of block input</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>upscale_block</strong> – module that upscales an input tensor</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>escnn.nn.SequentialModule</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="c8_invariant_cnn.C8InvariantCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">c8_invariant_cnn.</span></span><span class="sig-name descname"><span class="pre">C8InvariantCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#C8InvariantCNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.C8InvariantCNN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#c8_invariant_cnn.AbstractC8InvariantCNN" title="c8_invariant_cnn.AbstractC8InvariantCNN"><code class="xref py py-class docutils literal notranslate"><span class="pre">c8_invariant_cnn.AbstractC8InvariantCNN</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>This class implements a C8-invariant Dense CNN that takes in 144x144xN tensor inputs and
+returns a 144x144x1 cloud mask.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kernel_size</strong> (<em>int</em>) – side length of convolutions in DenseBlocks (default=3)</p></li>
+<li><p><strong>input_channels</strong> (<em>int</em>) – number of input channels (default=4)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="c8_invariant_cnn.C8InvariantCNN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#C8InvariantCNN.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.C8InvariantCNN.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function runs the C8 invariant CNN forwards.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_tensor</strong> (<em>torch.Tensor</em>) – RGB+IR images to put in the model</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>output_tensor</strong> – cloud map</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="c8_invariant_cnn.NonDenseC8InvariantCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">c8_invariant_cnn.</span></span><span class="sig-name descname"><span class="pre">NonDenseC8InvariantCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#NonDenseC8InvariantCNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.NonDenseC8InvariantCNN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#c8_invariant_cnn.AbstractC8InvariantCNN" title="c8_invariant_cnn.AbstractC8InvariantCNN"><code class="xref py py-class docutils literal notranslate"><span class="pre">c8_invariant_cnn.AbstractC8InvariantCNN</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>This class implements a C8-invariant CNN that takes in 144x144xN tensor inputs and
+returns a 144x144x1 cloud mask.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kernel_size</strong> (<em>int</em>) – side length of convolutions in DenseBlocks (default=3)</p></li>
+<li><p><strong>input_channels</strong> (<em>int</em>) – number of input channels (default=4)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="c8_invariant_cnn.NonDenseC8InvariantCNN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/c8_invariant_cnn.html#NonDenseC8InvariantCNN.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c8_invariant_cnn.NonDenseC8InvariantCNN.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function runs the C8 invariant CNN forwards.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_tensor</strong> (<em>torch.Tensor</em>) – RGB+IR images to put in the model</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>output_tensor</strong> – cloud map</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-escnn_extension">
+<span id="extensions-to-escnn-library"></span><h2>Extensions to escnn Library<a class="headerlink" href="#module-escnn_extension" title="Permalink to this headline">¶</a></h2>
+<p>This module extends some commonly used modules from the escnn library
+to be savable and loadable from files.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableBatchNorm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">escnn_extension.</span></span><span class="sig-name descname"><span class="pre">InteroperableBatchNorm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">e2cnn.nn.field_type.FieldType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_running_stats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableBatchNorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableBatchNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">e2cnn.nn.modules.batchnormalization.inner.InnerBatchNorm</span></code></p>
+<p>This module extends escnn.nn.InnerBatchNorm to be easily saved + loaded from disk.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableBatchNorm.get_save_dict">
+<span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableBatchNorm.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableBatchNorm.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method saves an InteroperableBatchNorm block to a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – dictionary with properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableBatchNorm.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableBatchNorm.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableBatchNorm.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method loads an InteroperableBatchNorm block from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – contains properties to load</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>bn_module</strong> – module that shares properties from dictionary</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#escnn_extension.InteroperableBatchNorm" title="escnn_extension.InteroperableBatchNorm">InteroperableBatchNorm</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableGroupPooling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">escnn_extension.</span></span><span class="sig-name descname"><span class="pre">InteroperableGroupPooling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">e2cnn.nn.field_type.FieldType</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableGroupPooling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableGroupPooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">e2cnn.nn.modules.invariantmaps.gpool.GroupPooling</span></code></p>
+<p>This module extends escnn.nn.GroupPooling to be easily saved + loaded from disk.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableGroupPooling.get_save_dict">
+<span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableGroupPooling.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableGroupPooling.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method saves all relevant properties of the InteroperableGroupPooling module
+in a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties in dict</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – contains properties to save to disk</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableGroupPooling.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableGroupPooling.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableGroupPooling.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method loads an InteroperableGroupPooling module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary of properties for module</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>gp_module</strong> – module implementing those properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#escnn_extension.InteroperableGroupPooling" title="escnn_extension.InteroperableGroupPooling">InteroperableGroupPooling</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableMaxBlurPool">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">escnn_extension.</span></span><span class="sig-name descname"><span class="pre">InteroperableMaxBlurPool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">e2cnn.nn.field_type.FieldType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ceil_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.6</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableMaxBlurPool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableMaxBlurPool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">e2cnn.nn.modules.pooling.pointwise_max.PointwiseMaxPoolAntialiased</span></code></p>
+<p>This module extends escnn.nn.PointwiseMaxPoolAntialiased to be easily saved + loaded
+from disk.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableMaxBlurPool.get_save_dict">
+<span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableMaxBlurPool.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableMaxBlurPool.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method saves all relevant properties of the InteroperableMaxBlurPool to a
+state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties in dict</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – contains properties to save to disk</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableMaxBlurPool.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableMaxBlurPool.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableMaxBlurPool.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method loads an InteroperableMaxBlurPool from a state dictionary containing
+a filter, input type, kernel size, and padding information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – contains properties to load</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>pool_module</strong> – module that shares properties from dictionary</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#escnn_extension.InteroperableMaxBlurPool" title="escnn_extension.InteroperableMaxBlurPool">InteroperableMaxBlurPool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableR2Conv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">escnn_extension.</span></span><span class="sig-name descname"><span class="pre">InteroperableR2Conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">e2cnn.nn.field_type.FieldType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">e2cnn.nn.field_type.FieldType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'zeros'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basisexpansion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'blocks'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequencies_cutoff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximum_offset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recompute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis_filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableR2Conv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableR2Conv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">e2cnn.nn.modules.r2_conv.r2convolution.R2Conv</span></code></p>
+<p>This module extends escnn.nn.R2Conv to be easily saved + loaded from disk.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableR2Conv.get_save_dict">
+<span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableR2Conv.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableR2Conv.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method gets a dictionary with key properties to save in a pickleable format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em>) – prefix for properties in dict</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – dictionary with properties to save</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableR2Conv.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableR2Conv.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableR2Conv.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method loads an InteroperableR2Conv module from a dictionary of properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary with properties to load</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>eq_module</strong> – new module with loaded properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#escnn_extension.InteroperableR2Conv" title="escnn_extension.InteroperableR2Conv">InteroperableR2Conv</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableReLU">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">escnn_extension.</span></span><span class="sig-name descname"><span class="pre">InteroperableReLU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">e2cnn.nn.field_type.FieldType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableReLU"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableReLU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">e2cnn.nn.modules.nonlinearities.relu.ReLU</span></code></p>
+<p>This module extends escnn.nn.ReLU to be easily saved + loaded from disk.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableReLU.get_save_dict">
+<span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableReLU.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableReLU.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method saves an InteroperableReLU block to a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – dictionary with properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableReLU.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableReLU.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableReLU.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method loads an InteroperableReLU block from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – properties for ReLU block</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>relu_module</strong> – ReLU block implementing properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#escnn_extension.InteroperableReLU" title="escnn_extension.InteroperableReLU">InteroperableReLU</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableUpsample">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">escnn_extension.</span></span><span class="sig-name descname"><span class="pre">InteroperableUpsample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">e2cnn.nn.field_type.FieldType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'bilinear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">align_corners</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableUpsample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableUpsample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">e2cnn.nn.modules.r2upsampling.R2Upsampling</span></code></p>
+<p>This module extends escnn.nn.R2Upsampling to be easily saved + loaded from disk.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableUpsample.get_save_dict">
+<span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableUpsample.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableUpsample.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method saves all relevant properties of the InteroperableUpsample in a
+dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties in dict</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – contains properties to save to disk</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="escnn_extension.InteroperableUpsample.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/escnn_extension.html#InteroperableUpsample.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#escnn_extension.InteroperableUpsample.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method loads an InteroperableUpsample module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary of properties for module</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ups_module</strong> – module implementing those properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#escnn_extension.InteroperableUpsample" title="escnn_extension.InteroperableUpsample">InteroperableUpsample</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-basic_blocks"></span><p>This module implements some basic blocks that are useful
+for C8-invariant and similarly flavored models.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="basic_blocks.ActivationBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">basic_blocks.</span></span><span class="sig-name descname"><span class="pre">ActivationBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relu_slope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#ActivationBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.ActivationBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#basic_blocks.SavableModule" title="basic_blocks.SavableModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">basic_blocks.SavableModule</span></code></a></p>
+<p>This module represents a final 1x1 convolution, batchnorm, leaky ReLU, and sigmoid
+activation which can be saved and loaded from a dictionary.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.ActivationBlock.get_save_dict">
+<span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#ActivationBlock.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.ActivationBlock.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method saves all relevant properties of the ActivationBlock module
+in a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties in dict</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – contains properties to save to disk</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.ActivationBlock.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#ActivationBlock.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.ActivationBlock.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method loads an ActivationBlock module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary of properties for module</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>activation_module</strong> – module implementing those properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#basic_blocks.ActivationBlock" title="basic_blocks.ActivationBlock">ActivationBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="basic_blocks.BasicConvBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">basic_blocks.</span></span><span class="sig-name descname"><span class="pre">BasicConvBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#BasicConvBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.BasicConvBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Inherits from torch.nn.Module. PyTorch wrapper on EquivariantBasicConvBlock.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layers</strong> (<em>list</em>) – list of (name, layer) pairs where each layer is a torch.nn.Module
+representing a layer in an EquivariantBasicConvBlock</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.BasicConvBlock._layers">
+<span class="sig-name descname"><span class="pre">_layers</span></span><a class="headerlink" href="#basic_blocks.BasicConvBlock._layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of (name, layer) pairs where each layer is a torch.nn.Module
+representing a layer in an EquivariantBasicConvBlock</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.BasicConvBlock.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#BasicConvBlock.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.BasicConvBlock.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the model forward by running each layers in the EquivariantBasicConvBlock
+sequentially, then concatenating the input to output.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="basic_blocks.DenseBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">basic_blocks.</span></span><span class="sig-name descname"><span class="pre">DenseBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_sub_blocks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#DenseBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.DenseBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#basic_blocks.EquivariantSavableModule" title="basic_blocks.EquivariantSavableModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">basic_blocks.EquivariantSavableModule</span></code></a></p>
+<p>Inherits from EquivariantSavableModule. Describes a dense block used in
+the C8InvariantCNN class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_type</strong> (<em>escnn.nn.FieldType</em>) – <dl class="simple">
+<dt>input type of basic block, giving invariant representation of block input. Must have</dt><dd><p>fewer channels than out_type</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>out_type</strong> (<em>escnn.nn.FieldType</em>) – output type of basic block, giving invariant rep/dims of block output</p></li>
+<li><p><strong>n_sub_blocks</strong> (<em>int</em><em> (</em><em>optional</em><em>)</em>) – number of sub-blocks in each dense block
+default is 4</p></li>
+<li><p><strong>kernel_size</strong> (<em>int</em><em> (</em><em>optional</em><em>)</em>) – sidelength for non-1x1 convolution in EquivariantBasicConvBlock. default is 3</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.DenseBlock.block">
+<span class="sig-name descname"><span class="pre">block</span></span><a class="headerlink" href="#basic_blocks.DenseBlock.block" title="Permalink to this definition">¶</a></dt>
+<dd><p>implementation of the DenseBlock</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.SequentialModule</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.DenseBlock.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#DenseBlock.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.DenseBlock.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load this module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary containing properties</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>basic_module</strong> – module implementing properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#basic_blocks.DenseBlock" title="basic_blocks.DenseBlock">DenseBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="basic_blocks.DownscaleBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">basic_blocks.</span></span><span class="sig-name descname"><span class="pre">DownscaleBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#DownscaleBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.DownscaleBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#basic_blocks.EquivariantSavableModule" title="basic_blocks.EquivariantSavableModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">basic_blocks.EquivariantSavableModule</span></code></a></p>
+<p>Inherits from EquivariantSavableModule. Simple block that provides spatial
+downscaling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_type</strong> (<em>escnn.nn.FieldType</em>) – input type of basic block, giving invariant representation of block input</p></li>
+<li><p><strong>out_type</strong> (<em>escnn.nn.FieldType</em>) – output type, gives invariant rep of block output</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.DownscaleBlock.in_type">
+<span class="sig-name descname"><span class="pre">in_type</span></span><a class="headerlink" href="#basic_blocks.DownscaleBlock.in_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>input type of basic block, giving invariant representation of block input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.DownscaleBlock.out_type">
+<span class="sig-name descname"><span class="pre">out_type</span></span><a class="headerlink" href="#basic_blocks.DownscaleBlock.out_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>output type, gives invariant rep of block output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.DownscaleBlock.block">
+<span class="sig-name descname"><span class="pre">block</span></span><a class="headerlink" href="#basic_blocks.DownscaleBlock.block" title="Permalink to this definition">¶</a></dt>
+<dd><p>actual layers to use in forward method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>nn.SequentialModule</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.DownscaleBlock.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#DownscaleBlock.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.DownscaleBlock.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load this module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary containing properties</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>downscale_module</strong> – module implementing properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#basic_blocks.DownscaleBlock" title="basic_blocks.DownscaleBlock">DownscaleBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">basic_blocks.</span></span><span class="sig-name descname"><span class="pre">EquivariantBasicConvBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_to_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#EquivariantBasicConvBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#basic_blocks.EquivariantSavableModule" title="basic_blocks.EquivariantSavableModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">basic_blocks.EquivariantSavableModule</span></code></a></p>
+<p>Inherits from EquivariantSavableModule. Describes a two-step basic block used in the
+DenseBlock and C8InvariantCNN class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_type</strong> (<em>escnn.nn.FieldType</em>) – input type of basic block, giving invariant representation of block input</p></li>
+<li><p><strong>out_type</strong> (<em>escnn.nn.FieldType</em>) – <dl class="simple">
+<dt>output type of basic block EXCLUDING CONCATENATION to input. This is NOT the same as</dt><dd><p>the out_type attribute</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>out_to_in</strong> (<em>int</em><em> (</em><em>optional</em><em>)</em>) – <dl class="simple">
+<dt>ratio of # of channels in dense block output to # of channels in dense block</dt><dd><p>input (default is 2). May not be the same as out-to-in ratio of channels
+for a specific EquivariantBasicConvBlock</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.in_type">
+<span class="sig-name descname"><span class="pre">in_type</span></span><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.in_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>input type of basic block, giving invariant representation of block input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.out_type">
+<span class="sig-name descname"><span class="pre">out_type</span></span><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.out_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>output type of basic block, giving invariant rep/dims of block output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock._layers">
+<span class="sig-name descname"><span class="pre">_layers</span></span><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock._layers" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>list of (name, escnn.nn.SequentialModule) pairs representing layers in order:</dt><dd><p>BN, ReLU, 1x1 Conv, BN, ReLU, 3x3 Conv</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.batch_norm">
+<span class="sig-name descname"><span class="pre">batch_norm</span></span><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.batch_norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>batch norm layer performed on input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.InnerBatchNorm</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.relu">
+<span class="sig-name descname"><span class="pre">relu</span></span><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.relu" title="Permalink to this definition">¶</a></dt>
+<dd><p>relu layer prior to first convolutional layer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.ReLu</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.conv_1x1">
+<span class="sig-name descname"><span class="pre">conv_1x1</span></span><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.conv_1x1" title="Permalink to this definition">¶</a></dt>
+<dd><p>C8-invariant 1x1 convolutional layer done after first batch norm + ReLu</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#escnn_extension.InteroperableR2Conv" title="escnn_extension.InteroperableR2Conv">InteroperableR2Conv</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.batch_norm_2">
+<span class="sig-name descname"><span class="pre">batch_norm_2</span></span><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.batch_norm_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>batch norm layer on output of 1x1 convolution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.InnerBatchNorm</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.relu_2">
+<span class="sig-name descname"><span class="pre">relu_2</span></span><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.relu_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>relu layer done on output of batch norm</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.ReLu</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.conv_NxN">
+<span class="sig-name descname"><span class="pre">conv_NxN</span></span><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.conv_NxN" title="Permalink to this definition">¶</a></dt>
+<dd><p>final C8-invariant NxN convolutional layer to give output of basic block</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#escnn_extension.InteroperableR2Conv" title="escnn_extension.InteroperableR2Conv">InteroperableR2Conv</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.export">
+<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#EquivariantBasicConvBlock.export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.export" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export this module to a normal PyTorch module and set to “eval” mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>module</strong> – torch export of this module</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#basic_blocks.BasicConvBlock" title="basic_blocks.BasicConvBlock">BasicConvBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#EquivariantBasicConvBlock.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the EquivariantBasicConvBlock forwards, putting an input tensor
+through each layer (in order).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>escnn.nn.GeometricTensor</em>) – tensor with an invariant type given as input</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>out</strong> – tensor with an invariant type given as output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>escnn.nn.GeometricTensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.get_save_dict">
+<span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#EquivariantBasicConvBlock.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save properties of this module to a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties in dict</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – properties of this module</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantBasicConvBlock.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#EquivariantBasicConvBlock.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.EquivariantBasicConvBlock.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load this module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary containing properties</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>basic_module</strong> – module implementing properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#basic_blocks.EquivariantBasicConvBlock" title="basic_blocks.EquivariantBasicConvBlock">EquivariantBasicConvBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantSavableModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">basic_blocks.</span></span><span class="sig-name descname"><span class="pre">EquivariantSavableModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#EquivariantSavableModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.EquivariantSavableModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#basic_blocks.SavableModule" title="basic_blocks.SavableModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">basic_blocks.SavableModule</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">e2cnn.nn.modules.equivariant_module.EquivariantModule</span></code></p>
+<p>Abstract extension of escnn.nn.EquivariantModule that allows for saving
+and loading a model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_type</strong> (<em>escnn.nn.FieldType</em>) – input type of basic block, giving invariant representation of block input</p></li>
+<li><p><strong>out_type</strong> (<em>escnn.nn.FieldType</em>) – output type, gives invariant rep of block output</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantSavableModule.in_type">
+<span class="sig-name descname"><span class="pre">in_type</span></span><a class="headerlink" href="#basic_blocks.EquivariantSavableModule.in_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>input type of basic block, giving invariant representation of block input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantSavableModule.out_type">
+<span class="sig-name descname"><span class="pre">out_type</span></span><a class="headerlink" href="#basic_blocks.EquivariantSavableModule.out_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>output type, gives invariant rep of block output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantSavableModule.block">
+<span class="sig-name descname"><span class="pre">block</span></span><a class="headerlink" href="#basic_blocks.EquivariantSavableModule.block" title="Permalink to this definition">¶</a></dt>
+<dd><p>actual layers to use in forward method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>nn.SequentialModule</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantSavableModule.evaluate_output_shape">
+<span class="sig-name descname"><span class="pre">evaluate_output_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#EquivariantSavableModule.evaluate_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.EquivariantSavableModule.evaluate_output_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate output shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_shape</strong> (<em>tuple</em>) – size-4 tuple (size of inv group, channels, x, y)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>output_shape</strong> – size-4 tuple (size of inv group, channels, x, y)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantSavableModule.export">
+<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#EquivariantSavableModule.export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.EquivariantSavableModule.export" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports this module to a torch.nn.Module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>module</strong> – PyTorch version of this module</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>torch.nn.Sequential</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.EquivariantSavableModule.get_save_dict">
+<span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#EquivariantSavableModule.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.EquivariantSavableModule.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save properties of this module to a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties in dict</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – properties of this module</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="basic_blocks.ReduceChannelDimsBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">basic_blocks.</span></span><span class="sig-name descname"><span class="pre">ReduceChannelDimsBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#ReduceChannelDimsBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.ReduceChannelDimsBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#basic_blocks.EquivariantSavableModule" title="basic_blocks.EquivariantSavableModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">basic_blocks.EquivariantSavableModule</span></code></a></p>
+<p>Inherits from EquivariantSavableModule. Simple block that reduces channel
+dimensionality.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_type</strong> (<em>escnn.nn.FieldType</em>) – input type of basic block, giving invariant representation of block input</p></li>
+<li><p><strong>out_type</strong> (<em>escnn.nn.FieldType</em>) – output type, gives invariant rep of block output</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.ReduceChannelDimsBlock.in_type">
+<span class="sig-name descname"><span class="pre">in_type</span></span><a class="headerlink" href="#basic_blocks.ReduceChannelDimsBlock.in_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>input type of basic block, giving invariant representation of block input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.ReduceChannelDimsBlock.out_type">
+<span class="sig-name descname"><span class="pre">out_type</span></span><a class="headerlink" href="#basic_blocks.ReduceChannelDimsBlock.out_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>output type, gives invariant rep of block output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.ReduceChannelDimsBlock.inplace">
+<span class="sig-name descname"><span class="pre">inplace</span></span><a class="headerlink" href="#basic_blocks.ReduceChannelDimsBlock.inplace" title="Permalink to this definition">¶</a></dt>
+<dd><p>whether or not ReLU activation is inplace</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.ReduceChannelDimsBlock.block">
+<span class="sig-name descname"><span class="pre">block</span></span><a class="headerlink" href="#basic_blocks.ReduceChannelDimsBlock.block" title="Permalink to this definition">¶</a></dt>
+<dd><p>actual layers to use in forward method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>nn.SequentialModule</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.ReduceChannelDimsBlock.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#ReduceChannelDimsBlock.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.ReduceChannelDimsBlock.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load this module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary containing properties</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>reduce_module</strong> – module implementing properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#basic_blocks.ReduceChannelDimsBlock" title="basic_blocks.ReduceChannelDimsBlock">ReduceChannelDimsBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="basic_blocks.SavableModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">basic_blocks.</span></span><span class="sig-name descname"><span class="pre">SavableModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#SavableModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.SavableModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract extension of escnn.nn.EquivariantModule that allows for saving
+and loading a model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_type</strong> (<em>escnn.nn.FieldType</em>) – input type of basic block, giving invariant representation of block input</p></li>
+<li><p><strong>out_type</strong> (<em>escnn.nn.FieldType</em>) – output type, gives invariant rep of block output</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.SavableModule.in_type">
+<span class="sig-name descname"><span class="pre">in_type</span></span><a class="headerlink" href="#basic_blocks.SavableModule.in_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>input type of basic block, giving invariant representation of block input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.SavableModule.out_type">
+<span class="sig-name descname"><span class="pre">out_type</span></span><a class="headerlink" href="#basic_blocks.SavableModule.out_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>output type, gives invariant rep of block output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.SavableModule.block">
+<span class="sig-name descname"><span class="pre">block</span></span><a class="headerlink" href="#basic_blocks.SavableModule.block" title="Permalink to this definition">¶</a></dt>
+<dd><p>actual layers to use in forward method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>nn.SequentialModule</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.SavableModule.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#SavableModule.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.SavableModule.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forward pass of SavableModule. Called during model evaluation and testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>escnn.nn.GeometricTensor</em>) – tensor with an invariant type given as input</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>out</strong> – tensor with an invariant type given as output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>escnn.nn.GeometricTensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.SavableModule.get_save_dict">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_save_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#SavableModule.get_save_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.SavableModule.get_save_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save properties of this module to a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – prefix for properties in dict</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>properties</strong> – properties of this module</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.SavableModule.load_from_dict">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#SavableModule.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.SavableModule.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load this module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary containing properties</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>module</strong> – module implementing properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#basic_blocks.SavableModule" title="basic_blocks.SavableModule">SavableModule</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="basic_blocks.TwoStepConvBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">basic_blocks.</span></span><span class="sig-name descname"><span class="pre">TwoStepConvBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#TwoStepConvBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.TwoStepConvBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#basic_blocks.EquivariantSavableModule" title="basic_blocks.EquivariantSavableModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">basic_blocks.EquivariantSavableModule</span></code></a></p>
+<p>Inherits from EquivariantSavableModule. Describes a two-step convolution
+block used in the VanillaC8InvariantCNN class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_type</strong> (<em>escnn.nn.FieldType</em>) – input type, giving invariant representation and dims of block input</p></li>
+<li><p><strong>out_type</strong> (<em>escnn.nn.FieldType</em>) – output type, giving invariant representation and dims of block output</p></li>
+<li><p><strong>kernel_size</strong> (<em>int</em><em> (</em><em>optional</em><em>)</em>) – size of convolution kernel</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.TwoStepConvBlock.block">
+<span class="sig-name descname"><span class="pre">block</span></span><a class="headerlink" href="#basic_blocks.TwoStepConvBlock.block" title="Permalink to this definition">¶</a></dt>
+<dd><p>implementation of the two-step convolution block</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>e2cnn.nn.SequentialModule</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.TwoStepConvBlock.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#TwoStepConvBlock.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.TwoStepConvBlock.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load this module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary containing properties</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>conv_module</strong> – module implementing properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#basic_blocks.TwoStepConvBlock" title="basic_blocks.TwoStepConvBlock">TwoStepConvBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="basic_blocks.UpscaleBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">basic_blocks.</span></span><span class="sig-name descname"><span class="pre">UpscaleBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#UpscaleBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.UpscaleBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#basic_blocks.EquivariantSavableModule" title="basic_blocks.EquivariantSavableModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">basic_blocks.EquivariantSavableModule</span></code></a></p>
+<p>Inherits from EqivariantSavableModule. Simple block that provides spatial
+upsampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_type</strong> (<em>escnn.nn.FieldType</em>) – input type of basic block, giving invariant representation of block input</p></li>
+<li><p><strong>out_type</strong> (<em>escnn.nn.FieldType</em>) – output type, gives invariant rep of block output</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.UpscaleBlock.in_type">
+<span class="sig-name descname"><span class="pre">in_type</span></span><a class="headerlink" href="#basic_blocks.UpscaleBlock.in_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>input type of basic block, giving invariant representation of block input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.UpscaleBlock.out_type">
+<span class="sig-name descname"><span class="pre">out_type</span></span><a class="headerlink" href="#basic_blocks.UpscaleBlock.out_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>output type, gives invariant rep of block output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>escnn.nn.FieldType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="basic_blocks.UpscaleBlock.block">
+<span class="sig-name descname"><span class="pre">block</span></span><a class="headerlink" href="#basic_blocks.UpscaleBlock.block" title="Permalink to this definition">¶</a></dt>
+<dd><p>actual layers to use in forward method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>nn.SequentialModule</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="basic_blocks.UpscaleBlock.load_from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/basic_blocks.html#UpscaleBlock.load_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#basic_blocks.UpscaleBlock.load_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load this module from a state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>properties</strong> (<em>dict</em>) – dictionary containing properties</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>upscale_module</strong> – module implementing properties</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#basic_blocks.UpscaleBlock" title="basic_blocks.UpscaleBlock">UpscaleBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-focal_loss">
+<span id="focal-loss"></span><h2>Focal Loss<a class="headerlink" href="#module-focal_loss" title="Permalink to this headline">¶</a></h2>
+<p>This function implements binary focal loss for tensors of arbitrary size/shape.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="focal_loss.BinaryFocalLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">focal_loss.</span></span><span class="sig-name descname"><span class="pre">BinaryFocalLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/focal_loss.html#BinaryFocalLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#focal_loss.BinaryFocalLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.loss._Loss</span></code></p>
+<p>Inherits from torch.nn.modules.loss._Loss. Finds the binary focal loss between each element
+in the input and target tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gamma</strong> (<em>float</em><em> (</em><em>optional</em><em>)</em>) – power to raise (1-pt) to when computing focal loss. Default is 2</p></li>
+<li><p><strong>reduction</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – <dl class="simple">
+<dt>“sum”, “mean”, or “none”. If sum, the output will be summed, if mean, the output will</dt><dd><p>be averaged, if none, no reduction will be applied. Default is mean</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="focal_loss.BinaryFocalLoss.gamma">
+<span class="sig-name descname"><span class="pre">gamma</span></span><a class="headerlink" href="#focal_loss.BinaryFocalLoss.gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>focusing parameter – power to raise (1-pt) to when computing focal loss. Default is 2</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="focal_loss.BinaryFocalLoss.eps">
+<span class="sig-name descname"><span class="pre">eps</span></span><a class="headerlink" href="#focal_loss.BinaryFocalLoss.eps" title="Permalink to this definition">¶</a></dt>
+<dd><p>machine epsilon as defined for pytorch</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="focal_loss.BinaryFocalLoss.reduction">
+<span class="sig-name descname"><span class="pre">reduction</span></span><a class="headerlink" href="#focal_loss.BinaryFocalLoss.reduction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>“sum”, “mean”, or “none”. If sum, the output will be summed, if mean, the output will</dt><dd><p>be averaged, if none, no reduction will be applied. Default is mean</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="focal_loss.BinaryFocalLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/focal_loss.html#BinaryFocalLoss.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#focal_loss.BinaryFocalLoss.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute binary focal loss for an input prediction map and target mask.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_tensor</strong> (<em>torch.Tensor</em>) – input prediction map</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – target mask</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>loss_tensor</strong> – binary focal loss, summed, averaged, or raw depending on self.reduction</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-train_pytorch_model">
+<span id="model-training-metrics-and-utils"></span><h2>Model Training, Metrics, and Utils<a class="headerlink" href="#module-train_pytorch_model" title="Permalink to this headline">¶</a></h2>
+<p>This module trains a PyTorch model on a dataset and evaluates it on various metrics.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="train_pytorch_model.evaluate_rotational_equivariance">
+<span class="sig-prename descclassname"><span class="pre">train_pytorch_model.</span></span><span class="sig-name descname"><span class="pre">evaluate_rotational_equivariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ir_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">144</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/train_pytorch_model.html#evaluate_rotational_equivariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#train_pytorch_model.evaluate_rotational_equivariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function evaluates the rotation equivariance of a PyTorch model
+on an image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – a PyTorch model to test</p></li>
+<li><p><strong>rgb_image</strong> (<em>PIL.Image</em>) – RGB image to test equivariance on</p></li>
+<li><p><strong>ir_image</strong> (<em>PIL.Image</em>) – IR image to test equivariance on</p></li>
+<li><p><strong>angle</strong> (<em>float</em>) – basic angle to test equivariance for [degrees]</p></li>
+<li><p><strong>img_dim</strong> (<em>int</em><em> (</em><em>optional</em><em>)</em>) – side length of image, default 144</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>max_diff</strong> – max pixel-wise difference in predictions over rotated inputs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="train_pytorch_model.load_model_from_checkpoint">
+<span class="sig-prename descclassname"><span class="pre">train_pytorch_model.</span></span><span class="sig-name descname"><span class="pre">load_model_from_checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_checkpoints'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/train_pytorch_model.html#load_model_from_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#train_pytorch_model.load_model_from_checkpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function loads a model from a checkpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – a PyTorch model to load</p></li>
+<li><p><strong>optimizer</strong> (<em>torch.optim._Optimizer</em>) – optimizer class to load</p></li>
+<li><p><strong>epoch</strong> (<em>int</em>) – epoch number of the model</p></li>
+<li><p><strong>lr</strong> (<em>float</em>) – learning rate of the model</p></li>
+<li><p><strong>directory</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – string to save model to, default is model_checkpoints</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – loaded PyTorch model to test</p></li>
+<li><p><strong>optimizer</strong> (<em>torch.optim._Optimizer</em>) – loaded optimizer for the model</p></li>
+<li><p><strong>epoch</strong> (<em>int</em>) – epoch number of the model</p></li>
+<li><p><strong>loss</strong> (<em>float</em>) – loss of the model at the epoch</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="train_pytorch_model.save_model_at_checkpoint">
+<span class="sig-prename descclassname"><span class="pre">train_pytorch_model.</span></span><span class="sig-name descname"><span class="pre">save_model_at_checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latest_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_checkpoints'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/train_pytorch_model.html#save_model_at_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#train_pytorch_model.save_model_at_checkpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function saves the model at a checkpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – a PyTorch model to test</p></li>
+<li><p><strong>optimizer</strong> (<em>torch.optim._Optimizer</em>) – optimizer for the model</p></li>
+<li><p><strong>epoch</strong> (<em>int</em>) – epoch number of the model</p></li>
+<li><p><strong>latest_loss</strong> (<em>float</em>) – loss of the model at the epoch</p></li>
+<li><p><strong>directory</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – string to save model to, default is model_checkpoints</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="train_pytorch_model.train_model">
+<span class="sig-prename descclassname"><span class="pre">train_pytorch_model.</span></span><span class="sig-name descname"><span class="pre">train_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_every_x_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_fname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_out.pt'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/train_pytorch_model.html#train_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#train_pytorch_model.train_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function trains a PyTorch model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – a PyTorch model to test</p></li>
+<li><p><strong>optimizer</strong> (<em>torch.optim._Optimizer</em>) – optimizer for the model</p></li>
+<li><p><strong>loss_fn</strong> (<em>torch.nn.loss._Loss</em>) – a loss function to use for the model</p></li>
+<li><p><strong>train_set</strong> (<a class="reference internal" href="#cloud_dataset.CloudDataset" title="cloud_dataset.CloudDataset"><em>CloudDataset</em></a>) – training data set</p></li>
+<li><p><strong>val_set</strong> (<a class="reference internal" href="#cloud_dataset.CloudDataset" title="cloud_dataset.CloudDataset"><em>CloudDataset</em></a>) – validation data set</p></li>
+<li><p><strong>epochs</strong> (<em>int</em><em> (</em><em>optional</em><em>)</em>) – number of epochs to train for (default 10000)</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em> (</em><em>optional</em><em>)</em>) – bath size, default 10</p></li>
+<li><p><strong>val_every_x_epochs</strong> (<em>int</em><em> (</em><em>optional</em><em>)</em>) – every val_every_x_epochs, validate and check loss to avoid overtraining</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em> (</em><em>optional</em><em>)</em>) – if True, prints loss every val_every_x_epochs epochs</p></li>
+<li><p><strong>plot</strong> (<em>bool</em><em> (</em><em>optional</em><em>)</em>) – if True, plots loss every val_every_x_epochs epochs</p></li>
+<li><p><strong>save_model</strong> (<em>bool</em><em> (</em><em>optional</em><em>)</em>) – if True, save model state dict to model_out.pt after training finishes</p></li>
+<li><p><strong>model_fname</strong> (<em>string</em><em> (</em><em>optional</em><em>)</em>) – string to save model to, default is model_out.pt</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul>
+<li><p><strong>training_losses</strong> (<em>list</em>) – list of mean training loss at each epoch, in order</p></li>
+<li><p><strong>validation_losses</strong> (<em>list</em>) –</p>
+<dl class="simple">
+<dt>list of mean validation loss at each epoch <em>WHERE VALIDATION OCCURS</em>, in order</dt><dd><p>note that typically validation only occurs every 10 epochs, so this list
+will <em>LIKELY NOT</em> be the same length as training_losses</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="train_pytorch_model.train_single_epoch">
+<span class="sig-prename descclassname"><span class="pre">train_pytorch_model.</span></span><span class="sig-name descname"><span class="pre">train_single_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/train_pytorch_model.html#train_single_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#train_pytorch_model.train_single_epoch" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function trains a model for a single epoch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – model to train</p></li>
+<li><p><strong>optimizer</strong> (<em>torch.optim._Optimizer</em>) – optimizer for the model</p></li>
+<li><p><strong>loss_fn</strong> (<em>torch.nn.loss._Loss</em>) – loss function to use for the model</p></li>
+<li><p><strong>train_loader</strong> (<em>torch.utils.data.DataLoader</em>) – data loader for the training set</p></li>
+<li><p><strong>device</strong> (<em>string</em>) – device to use for the model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>loss</strong> – loss of the model at the epoch</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="train_pytorch_model.validate">
+<span class="sig-prename descclassname"><span class="pre">train_pytorch_model.</span></span><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/train_pytorch_model.html#validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#train_pytorch_model.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function validates a model on a dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – a PyTorch model to validate</p></li>
+<li><p><strong>val_loader</strong> (<em>torch.utils.data.DataLoader</em>) – data loader for the validation set</p></li>
+<li><p><strong>loss_fn</strong> (<em>torch.nn.loss._Loss</em>) – loss function to use for the model</p></li>
+<li><p><strong>device</strong> (<em>string</em>) – device to use for the model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>loss</strong> – loss of the model on the validation set</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-evaluate_model"></span><p>Evaluate performance of a Pytorch model</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">evaluate_model.</span></span><span class="sig-name descname"><span class="pre">ClassifierValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classifier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluate_model.html#ClassifierValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#evaluate_model.ClassifierValidator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class is used to evaluate the performance of a classifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>classifier</strong> (<em>torch.nn.Module</em>) – The classifier to evaluate.</p></li>
+<li><p><strong>test_set</strong> (<em>torch.utils.DataLoader</em>) – The test set to evaluate the classifier on.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – The device to use for the classifier.</p></li>
+<li><p><strong>val_set</strong> (<em>list</em>) – <dl class="simple">
+<dt>A list of dictionaries containing the images that the classifier</dt><dd><p>has been validated on.</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.classifier">
+<span class="sig-name descname"><span class="pre">classifier</span></span><a class="headerlink" href="#evaluate_model.ClassifierValidator.classifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>The classifier to evaluate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>torch.nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.device">
+<span class="sig-name descname"><span class="pre">device</span></span><a class="headerlink" href="#evaluate_model.ClassifierValidator.device" title="Permalink to this definition">¶</a></dt>
+<dd><p>The device to use for the classifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>torch.device</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.to_validate">
+<span class="sig-name descname"><span class="pre">to_validate</span></span><a class="headerlink" href="#evaluate_model.ClassifierValidator.to_validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The set of images to validate the classifier on.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>torch.utils.DataLoader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.validated_set">
+<span class="sig-name descname"><span class="pre">validated_set</span></span><a class="headerlink" href="#evaluate_model.ClassifierValidator.validated_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of dictionaries containing the images that the classifier
+has been validated on.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.validation_categories">
+<span class="sig-name descname"><span class="pre">validation_categories</span></span><a class="headerlink" href="#evaluate_model.ClassifierValidator.validation_categories" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of the categories that the classifier has been validated on.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.results_by_category">
+<span class="sig-name descname"><span class="pre">results_by_category</span></span><a class="headerlink" href="#evaluate_model.ClassifierValidator.results_by_category" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary of the results by category.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.false_pos">
+<span class="sig-name descname"><span class="pre">false_pos</span></span><a class="headerlink" href="#evaluate_model.ClassifierValidator.false_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of false positives.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.false_neg">
+<span class="sig-name descname"><span class="pre">false_neg</span></span><a class="headerlink" href="#evaluate_model.ClassifierValidator.false_neg" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of false negatives.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.true_pos">
+<span class="sig-name descname"><span class="pre">true_pos</span></span><a class="headerlink" href="#evaluate_model.ClassifierValidator.true_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of true positives.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.true_neg">
+<span class="sig-name descname"><span class="pre">true_neg</span></span><a class="headerlink" href="#evaluate_model.ClassifierValidator.true_neg" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of true negatives.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.compare_to_mask">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compare_to_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifier_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cloud_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluate_model.html#ClassifierValidator.compare_to_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#evaluate_model.ClassifierValidator.compare_to_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compares the classifier result to the reference mask.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref</strong> (<em>torch.Tensor</em>) – The reference mask.</p></li>
+<li><p><strong>classifier_result</strong> (<em>torch.Tensor</em>) – The classifier result.</p></li>
+<li><p><strong>cloud_threshold</strong> (<em>float</em>) – The threshold for the classifier to classify as cloud.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>metrics</strong> – A tuple of the form (false_pos, false_neg, true_pos, true_neg)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.evaluate_classifier">
+<span class="sig-name descname"><span class="pre">evaluate_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cloud_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluate_model.html#ClassifierValidator.evaluate_classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#evaluate_model.ClassifierValidator.evaluate_classifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the classifier given a cloud threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cloud_threshold</strong> (<em>float</em>) – The threshold for the classifier to classify as cloud.</p></li>
+<li><p><strong>save_on</strong> (<em>bool</em>) – If True, saves the results to self.results_by_category.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – If True, prints the progress of the evaluation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>false_pos</strong> (<em>int</em>) – The number of false positives.</p></li>
+<li><p><strong>false_neg</strong> (<em>int</em>) – The number of false negatives.</p></li>
+<li><p><strong>true_pos</strong> (<em>int</em>) – The number of true positives.</p></li>
+<li><p><strong>true_neg</strong> (<em>int</em>) – The number of true negatives.</p></li>
+<li><p><strong>results_by_category</strong> (<em>dict</em>) – A dictionary of the results by category.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.generate_comparison_table">
+<span class="sig-name descname"><span class="pre">generate_comparison_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cloud_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluate_model.html#ClassifierValidator.generate_comparison_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#evaluate_model.ClassifierValidator.generate_comparison_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a table of the results of the classifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cloud_threshold</strong> (<em>float</em>) – The threshold for the classifier to classify as cloud.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>table</strong> – A string representation of the table.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.generate_confusion_matrix">
+<span class="sig-name descname"><span class="pre">generate_confusion_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cloud_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_saved</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluate_model.html#ClassifierValidator.generate_confusion_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#evaluate_model.ClassifierValidator.generate_confusion_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a confusion matrix for the classifier given a cloud threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cloud_threshold</strong> (<em>float</em>) – The threshold for the classifier to classify as cloud.</p></li>
+<li><p><strong>category</strong> (<em>str</em>) – The category to generate the confusion matrix for.</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – The title of the confusion matrix plot.</p></li>
+<li><p><strong>from_saved</strong> (<em>bool</em>) – If True, uses the results from the last evaluation.</p></li>
+<li><p><strong>plot_on</strong> (<em>bool</em>) – If True, plots the confusion matrix.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – If True, prints the progress of the evaluation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>confusion_matrix</strong> (<em>np.array</em>) – The confusion matrix.</p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.pyplot.figure</em>) – The figure of the confusion matrix.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.axes</em>) – The axes of the confusion matrix.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.generate_roc_curve">
+<span class="sig-name descname"><span class="pre">generate_roc_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roc_thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0,</span> <span class="pre">0.1,</span> <span class="pre">0.2,</span> <span class="pre">0.3,</span> <span class="pre">0.4,</span> <span class="pre">0.5,</span> <span class="pre">0.6,</span> <span class="pre">0.7,</span> <span class="pre">0.8,</span> <span class="pre">0.9,</span> <span class="pre">1.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifier_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluate_model.html#ClassifierValidator.generate_roc_curve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#evaluate_model.ClassifierValidator.generate_roc_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a ROC curve for the classifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>roc_thresholds</strong> (<em>list</em>) – The thresholds to use for the ROC curve.</p></li>
+<li><p><strong>plot_on</strong> (<em>bool</em>) – If True, plots the ROC curve.</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – The title of the ROC curve plot.</p></li>
+<li><p><strong>classifier_label</strong> (<em>str</em>) – The label of the classifier in the plot legend.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>roc_fprates</strong> (<em>list</em>) – The false positive rates for the ROC curve.</p></li>
+<li><p><strong>roc_tprates</strong> (<em>list</em>) – The true positive rates for the ROC curve.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="evaluate_model.ClassifierValidator.validate_classifier">
+<span class="sig-name descname"><span class="pre">validate_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluate_model.html#ClassifierValidator.validate_classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#evaluate_model.ClassifierValidator.validate_classifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the classifier on the validation set and saves output to self.validated_set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>) – If True, prints the progress of the validation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="#">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Welcome to Alex Meredith’s SM Thesis’s documentation!</a><ul>
+<li><a class="reference internal" href="#module-cloud_dataset">CloudDataset</a></li>
+<li><a class="reference internal" href="#module-c8_invariant_cnn">C8 Invariant CNN</a></li>
+<li><a class="reference internal" href="#module-escnn_extension">Extensions to escnn Library</a></li>
+<li><a class="reference internal" href="#module-focal_loss">Focal Loss</a></li>
+<li><a class="reference internal" href="#module-train_pytorch_model">Model Training, Metrics, and Utils</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">SM Thesis 0.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Welcome to Alex Meredith’s SM Thesis’s documentation!</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Alex Meredith.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

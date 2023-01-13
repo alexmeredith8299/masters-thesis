@@ -1,0 +1,741 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>c8_invariant_cnn &#8212; SM Thesis 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">SM Thesis 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">c8_invariant_cnn</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for c8_invariant_cnn</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module implements an E(8)-equivariant steerable CNN as described in General E(2)-Equivariant</span>
+<span class="sd">Steerable CNNs (Weiler &amp; Cesa 2019).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">e2cnn</span> <span class="kn">import</span> <span class="n">gspaces</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">from</span> <span class="nn">scripts.escnn_extension</span> <span class="kn">import</span> <span class="n">InteroperableGroupPooling</span>
+<span class="kn">from</span> <span class="nn">scripts.basic_blocks</span> <span class="kn">import</span> <span class="n">DenseBlock</span><span class="p">,</span> <span class="n">ReduceChannelDimsBlock</span>
+<span class="kn">from</span> <span class="nn">scripts.basic_blocks</span> <span class="kn">import</span> <span class="n">DownscaleBlock</span><span class="p">,</span> <span class="n">UpscaleBlock</span> 
+<span class="kn">from</span> <span class="nn">scripts.basic_blocks</span> <span class="kn">import</span> <span class="n">ActivationBlock</span><span class="p">,</span> <span class="n">TwoStepConvBlock</span>
+
+<div class="viewcode-block" id="AbstractC8InvariantCNN"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.AbstractC8InvariantCNN">[docs]</a><span class="k">class</span> <span class="nc">AbstractC8InvariantCNN</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract implementation of a C8-invariant CNN that is savable and loadable.</span>
+
+<span class="sd">    Parameters </span>
+<span class="sd">    -----------</span>
+<span class="sd">        kernel_size: int </span>
+<span class="sd">            side length of convolutions in conv blocks (default=3)</span>
+<span class="sd">        input_channels: int </span>
+<span class="sd">            number of input channels (default=4)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="mi">3</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_channels</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r2_act</span> <span class="o">=</span> <span class="n">gspaces</span><span class="o">.</span><span class="n">Rot2dOnR2</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="AbstractC8InvariantCNN.forward"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.AbstractC8InvariantCNN.forward">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forward pass of the CNN. Called during model evaluation and testing.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            x: escnn.nn.GeometricTensor</span>
+<span class="sd">                tensor with an invariant type given as input</span>
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">            out: escnn.nn.GeometricTensor</span>
+<span class="sd">                tensor with an invariant type given as output</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function is called when pickling the model.</span>
+<span class="sd">        It returns a dictionary containing all the fields of the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">            state: dict</span>
+<span class="sd">                dictionary containing all the fields of the model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function is called when unpickling the model.</span>
+<span class="sd">        It sets all the fields of the model from the dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            state: dict</span>
+<span class="sd">                dictionary containing all the fields of the model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;kernel_size&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reload_from_dict</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AbstractC8InvariantCNN.state_dict"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.AbstractC8InvariantCNN.state_dict">[docs]</a>    <span class="k">def</span> <span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">destination</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">keep_vars</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save properties of this module to a dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties in dict</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                properties of this module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1">#Get dicts for each sub-block and update properties</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">:</span>
+            <span class="n">block_dict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">get_save_dict</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">properties</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">block_dict</span><span class="p">)</span>
+
+        <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;kernel_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span>
+
+        <span class="k">return</span> <span class="n">properties</span></div>
+
+
+<div class="viewcode-block" id="AbstractC8InvariantCNN.get_save_dict"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.AbstractC8InvariantCNN.get_save_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save properties of this module to a dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties in dict</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                properties of this module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1">#Get dicts for each sub-block and update properties</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">:</span>
+            <span class="n">block_dict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">get_save_dict</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">properties</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">block_dict</span><span class="p">)</span>
+
+        <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;kernel_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span>
+
+        <span class="k">return</span> <span class="n">properties</span></div>
+
+
+<div class="viewcode-block" id="AbstractC8InvariantCNN.reload_from_dict"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.AbstractC8InvariantCNN.reload_from_dict">[docs]</a>    <span class="k">def</span> <span class="nf">reload_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load this module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary containing properties</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Load blocks</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">block_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1">#Get properties dict for each block</span>
+            <span class="n">block_dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                    <span class="n">block_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+            <span class="c1">#Load block from dict and set value in cnn</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">block_type</span><span class="o">.</span><span class="n">load_from_dict</span><span class="p">(</span><span class="n">block_dict</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractC8InvariantCNN.load_from_dict"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.AbstractC8InvariantCNN.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load this module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary containing properties</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            module: C8InvariantCNN</span>
+<span class="sd">                module implementing properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Initialize C8InvariantCNN</span>
+        <span class="n">cnn</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">=</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;kernel_size&quot;</span><span class="p">])</span>
+        <span class="n">cnn</span><span class="o">.</span><span class="n">reload_from_dict</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cnn</span></div>
+
+<div class="viewcode-block" id="AbstractC8InvariantCNN.downscale"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.AbstractC8InvariantCNN.downscale">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">downscale</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function returns a &quot;downscaling block&quot; that reduces the dimensions of an</span>
+<span class="sd">        input tensor through pooling.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">             in_type: escnn.nn.FieldType</span>
+<span class="sd">                input type of dense block, giving invariant representation of block input</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            downscale_block: DownscaleBlock</span>
+<span class="sd">                module that downscales an input tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out_type</span> <span class="o">=</span> <span class="n">in_type</span>
+        <span class="k">return</span> <span class="n">DownscaleBlock</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">),</span> <span class="n">out_type</span></div>
+
+<div class="viewcode-block" id="AbstractC8InvariantCNN.upscale"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.AbstractC8InvariantCNN.upscale">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">upscale</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function returns an &quot;upscaling block&quot; that increases the dimensions of an</span>
+<span class="sd">        input tensor through upsampling.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">             in_type: escnn.nn.FieldType</span>
+<span class="sd">                input type of dense block, giving invariant representation of block input</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            upscale_block: escnn.nn.SequentialModule</span>
+<span class="sd">                module that upscales an input tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out_type</span> <span class="o">=</span> <span class="n">in_type</span>
+        <span class="k">return</span> <span class="n">UpscaleBlock</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="n">scale_factor</span><span class="p">),</span> <span class="n">out_type</span></div>
+
+<div class="viewcode-block" id="AbstractC8InvariantCNN.get_invariant_input_type"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.AbstractC8InvariantCNN.get_invariant_input_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets an escnn.nn.FieldType corresponding to an invariant representation of a CNN</span>
+<span class="sd">        with a given number of channels.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            channels: int</span>
+<span class="sd">                number of channels for input to next layer</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">            escnn.nn.FieldType</span>
+<span class="sd">                input to next layer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r2_act</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">channels</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">r2_act</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span></div></div>
+
+
+<div class="viewcode-block" id="C8InvariantCNN"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.C8InvariantCNN">[docs]</a><span class="k">class</span> <span class="nc">C8InvariantCNN</span><span class="p">(</span><span class="n">AbstractC8InvariantCNN</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class implements a C8-invariant Dense CNN that takes in 144x144xN tensor inputs and</span>
+<span class="sd">    returns a 144x144x1 cloud mask.</span>
+
+<span class="sd">    Parameters </span>
+<span class="sd">    ------------</span>
+<span class="sd">        kernel_size: int </span>
+<span class="sd">            side length of convolutions in DenseBlocks (default=3)</span>
+<span class="sd">        input_channels: int </span>
+<span class="sd">            number of input channels (default=4)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">input_channels</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1">#Model is equivariant under rotations by 45 degrees (C8)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r2_act</span> <span class="o">=</span> <span class="n">gspaces</span><span class="o">.</span><span class="n">Rot2dOnR2</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_5</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_5</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">128</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span> 
+
+        <span class="c1">#First convolution (144x144x4 -&gt; 144x144x16)</span>
+        <span class="n">input_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="n">input_channels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_type</span> <span class="o">=</span> <span class="n">input_type</span>
+        <span class="n">input_conv_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_conv_block</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">input_conv_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Second convolution (dense) + downscale (144x144x16 -&gt; 72x72x32)</span>
+        <span class="n">conv_1_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_1</span> <span class="o">=</span> <span class="n">DenseBlock</span><span class="p">(</span><span class="n">input_conv_output_type</span><span class="p">,</span> <span class="n">conv_1_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_1</span><span class="p">,</span> <span class="n">downsample_1_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downscale</span><span class="p">(</span><span class="n">conv_1_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Third convolution (dense) + downscale (72x72x32 -&gt; 36x36x64)</span>
+        <span class="n">conv_2_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_2</span> <span class="o">=</span> <span class="n">DenseBlock</span><span class="p">(</span><span class="n">downsample_1_output_type</span><span class="p">,</span> <span class="n">conv_2_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_2</span><span class="p">,</span> <span class="n">downsample_2_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downscale</span><span class="p">(</span><span class="n">conv_2_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Fourth convolution (dense) + downscale (36x36x64 -&gt; 18x18x128)</span>
+        <span class="n">conv_3_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_3</span> <span class="o">=</span> <span class="n">DenseBlock</span><span class="p">(</span><span class="n">downsample_2_output_type</span><span class="p">,</span> <span class="n">conv_3_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_3</span><span class="p">,</span> <span class="n">downsample_3_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downscale</span><span class="p">(</span><span class="n">conv_3_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Fifth convolution (dense) + downscale (18x18x128 -&gt; 9x9x256)</span>
+        <span class="n">conv_4_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_4</span> <span class="o">=</span> <span class="n">DenseBlock</span><span class="p">(</span><span class="n">downsample_3_output_type</span><span class="p">,</span> <span class="n">conv_4_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_4</span><span class="p">,</span> <span class="n">downsample_4_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downscale</span><span class="p">(</span><span class="n">conv_4_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Sixth convolution (dense bottleneck) (9x9x256 -&gt; 9x9x512)</span>
+        <span class="n">conv_5_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_5</span> <span class="o">=</span> <span class="n">DenseBlock</span><span class="p">(</span><span class="n">downsample_4_output_type</span><span class="p">,</span> <span class="n">conv_5_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+
+        <span class="c1">#Now time to upscale! (9x9x512 -&gt; 18x18x256)</span>
+        <span class="n">upscale_1_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upscale_1</span><span class="p">,</span> <span class="n">upscale_1_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale</span><span class="p">(</span><span class="n">conv_5_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Reduce channels with 1x1 conv before concatenation (18x18x512 -&gt; 18x18x256)</span>
+        <span class="n">reduce_1a_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_1a</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_1_output_type</span><span class="p">,</span>
+                <span class="n">reduce_1a_output_type</span><span class="p">)</span>
+
+        <span class="c1">#1x1 conv block on concatenated inputs (18x18x512 -&gt; 18x18x128)</span>
+        <span class="n">reduce_1_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_1</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_1_output_type</span><span class="p">,</span>
+                <span class="n">reduce_1_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Dense block (18x18x128 -&gt; 18x18x256)</span>
+        <span class="n">conv_6_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_6</span> <span class="o">=</span> <span class="n">DenseBlock</span><span class="p">(</span><span class="n">reduce_1_output_type</span><span class="p">,</span> <span class="n">conv_6_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+
+        <span class="c1">#Repeat upscale, concat, conv, dense (18x18x256 -&gt; 36x36x128)</span>
+        <span class="n">upscale_2_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upscale_2</span><span class="p">,</span> <span class="n">upscale_2_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale</span><span class="p">(</span><span class="n">conv_6_output_type</span><span class="p">)</span>
+        <span class="n">reduce_2a_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_2a</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_2_output_type</span><span class="p">,</span>
+                <span class="n">reduce_2a_output_type</span><span class="p">)</span>
+        <span class="n">reduce_2_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_2</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_2_output_type</span><span class="p">,</span>
+                <span class="n">reduce_2_output_type</span><span class="p">)</span>
+        <span class="n">conv_7_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_7</span> <span class="o">=</span> <span class="n">DenseBlock</span><span class="p">(</span><span class="n">reduce_2_output_type</span><span class="p">,</span> <span class="n">conv_7_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+
+        <span class="c1">#Repeat upscale, concat, conv, dense (36x36x128 -&gt; 72x72x64)</span>
+        <span class="n">upscale_3_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upscale_3</span><span class="p">,</span> <span class="n">upscale_3_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale</span><span class="p">(</span><span class="n">conv_7_output_type</span><span class="p">)</span>
+        <span class="n">reduce_3a_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_3a</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_3_output_type</span><span class="p">,</span>
+                <span class="n">reduce_3a_output_type</span><span class="p">)</span>
+        <span class="n">reduce_3_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_3</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_3_output_type</span><span class="p">,</span>
+                <span class="n">reduce_3_output_type</span><span class="p">)</span>
+        <span class="n">conv_8_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_8</span> <span class="o">=</span> <span class="n">DenseBlock</span><span class="p">(</span><span class="n">reduce_3_output_type</span><span class="p">,</span> <span class="n">conv_8_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+
+        <span class="c1">#Repeat upscale, concat, conv, dense (72x72x64 -&gt; 144x144x32)</span>
+        <span class="n">upscale_4_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upscale_4</span><span class="p">,</span> <span class="n">upscale_4_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale</span><span class="p">(</span><span class="n">conv_8_output_type</span><span class="p">)</span>
+        <span class="n">reduce_4_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_4</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_4_output_type</span><span class="p">,</span>
+                <span class="n">reduce_4_output_type</span><span class="p">)</span>
+        <span class="n">conv_9_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_9</span> <span class="o">=</span> <span class="n">DenseBlock</span><span class="p">(</span><span class="n">reduce_4_output_type</span><span class="p">,</span> <span class="n">conv_9_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+
+        <span class="c1">#Final output (1x1 conv to go to 144x144x1, then group pooling)</span>
+        <span class="n">final_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_reduce_block</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">conv_9_output_type</span><span class="p">,</span> <span class="n">final_output_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_pool_block</span> <span class="o">=</span> <span class="n">InteroperableGroupPooling</span><span class="p">(</span><span class="n">final_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Normal torch block (not group invariant) for final 1x1 conv/BN/Relu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plain_torch_block</span> <span class="o">=</span> <span class="n">ActivationBlock</span><span class="p">(</span><span class="n">relu_slope</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+        <span class="c1">#Dictionary mapping sub-blocks to types (for loading/saving from dictionaries)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;input_conv_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;dense_conv_block_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DenseBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;dense_conv_block_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DenseBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;dense_conv_block_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DenseBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;dense_conv_block_4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DenseBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;dense_conv_block_5&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DenseBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;dense_conv_block_6&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DenseBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;dense_conv_block_7&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DenseBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;dense_conv_block_8&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DenseBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;dense_conv_block_9&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DenseBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;downsample_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DownscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;downsample_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DownscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;downsample_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DownscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;downsample_4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DownscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;upscale_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">UpscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;upscale_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">UpscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;upscale_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">UpscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;upscale_4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">UpscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_1a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_2a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_3a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;group_reduce_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;group_pool_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">InteroperableGroupPooling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;plain_torch_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ActivationBlock</span>
+
+        <span class="c1">#Save to dict + then reload to ensure that all fields are initialized</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reload_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_save_dict</span><span class="p">())</span>
+
+<div class="viewcode-block" id="C8InvariantCNN.forward"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.C8InvariantCNN.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_tensor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function runs the C8 invariant CNN forwards.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            input_tensor: torch.Tensor</span>
+<span class="sd">                RGB+IR images to put in the model</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            output_tensor: torch.tensor</span>
+<span class="sd">                cloud map</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Transform input into C8-invariant GeometricTensor</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">GeometricTensor</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_type</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input shape before conversion: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">input_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input shape: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="c1">#Ingest layer</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x16</span>
+
+        <span class="c1">#Repeatedly downscale</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x32</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x32</span>
+
+        <span class="n">x_cat_72x72</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x64</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_2</span><span class="p">(</span><span class="n">x_cat_72x72</span><span class="p">)</span> <span class="c1">#36x36x64</span>
+
+        <span class="n">x_cat_36x36</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#36x36x128</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_3</span><span class="p">(</span><span class="n">x_cat_36x36</span><span class="p">)</span> <span class="c1">#18x18x128</span>
+
+        <span class="n">x_cat_18x18</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_4</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#18x18x256</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_4</span><span class="p">(</span><span class="n">x_cat_18x18</span><span class="p">)</span> <span class="c1">#9x9x256</span>
+
+        <span class="c1">#Bottleneck layer</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_5</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#9x9x512</span>
+
+        <span class="c1">#Repeatedly upscale</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#18x18x512</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_1a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#18x18x256</span>
+
+        <span class="c1">#Important note: concatenations happen in dimension 1</span>
+        <span class="c1">#because GeometricTensors have shape (inv_rep, channels, x, y)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">tensor_directsum</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x_cat_18x18</span><span class="p">])</span> <span class="c1">#18x18x512</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#18x18x128</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_6</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#18x18x256</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#36x36x256</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_2a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#36x36x128</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">tensor_directsum</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x_cat_36x36</span><span class="p">])</span> <span class="c1">#36x36x256</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#36x36x64</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_7</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#36x36x128</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale_3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x128</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_3a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x64</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">tensor_directsum</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x_cat_72x72</span><span class="p">])</span> <span class="c1">#72x72x128</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x32</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_8</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x64</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale_4</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x64</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_4</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x16</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense_conv_block_9</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x32</span>
+
+        <span class="c1">#Final C8-invariant layer (goes to torch.tensor)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_reduce_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x1</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_pool_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x1 torch.tensor</span>
+
+        <span class="c1">#Final torch layer</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">tensor</span> <span class="c1">#Unwrap GeometricTensor to get PyTorch tensor</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plain_torch_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x1 torch.tensor</span>
+
+        <span class="k">return</span> <span class="n">x</span></div></div>
+
+<div class="viewcode-block" id="NonDenseC8InvariantCNN"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.NonDenseC8InvariantCNN">[docs]</a><span class="k">class</span> <span class="nc">NonDenseC8InvariantCNN</span><span class="p">(</span><span class="n">AbstractC8InvariantCNN</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class implements a C8-invariant CNN that takes in 144x144xN tensor inputs and</span>
+<span class="sd">    returns a 144x144x1 cloud mask.</span>
+
+<span class="sd">    Parameters </span>
+<span class="sd">    ------------</span>
+<span class="sd">        kernel_size: int </span>
+<span class="sd">            side length of convolutions in DenseBlocks (default=3)</span>
+<span class="sd">        input_channels: int </span>
+<span class="sd">            number of input channels (default=4)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">input_channels</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1">#Model is equivariant under rotations by 45 degrees (C8)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r2_act</span> <span class="o">=</span> <span class="n">gspaces</span><span class="o">.</span><span class="n">Rot2dOnR2</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_5</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_5</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">128</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span> 
+
+        <span class="c1">#First convolution (144x144x4 -&gt; 144x144x16)</span>
+        <span class="n">input_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="n">input_channels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_type</span> <span class="o">=</span> <span class="n">input_type</span>
+        <span class="n">input_conv_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_conv_block</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">input_conv_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Second convolution (dense) + downscale (144x144x16 -&gt; 72x72x32)</span>
+        <span class="n">conv_1_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_1</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span><span class="p">(</span><span class="n">input_conv_output_type</span><span class="p">,</span> <span class="n">conv_1_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_1</span><span class="p">,</span> <span class="n">downsample_1_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downscale</span><span class="p">(</span><span class="n">conv_1_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Third convolution (dense) + downscale (72x72x32 -&gt; 36x36x64)</span>
+        <span class="n">conv_2_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_2</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span><span class="p">(</span><span class="n">downsample_1_output_type</span><span class="p">,</span> <span class="n">conv_2_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_2</span><span class="p">,</span> <span class="n">downsample_2_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downscale</span><span class="p">(</span><span class="n">conv_2_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Fourth convolution (dense) + downscale (36x36x64 -&gt; 18x18x128)</span>
+        <span class="n">conv_3_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_3</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span><span class="p">(</span><span class="n">downsample_2_output_type</span><span class="p">,</span> <span class="n">conv_3_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_3</span><span class="p">,</span> <span class="n">downsample_3_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downscale</span><span class="p">(</span><span class="n">conv_3_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Fifth convolution (dense) + downscale (18x18x128 -&gt; 9x9x256)</span>
+        <span class="n">conv_4_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_4</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span><span class="p">(</span><span class="n">downsample_3_output_type</span><span class="p">,</span> <span class="n">conv_4_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_4</span><span class="p">,</span> <span class="n">downsample_4_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downscale</span><span class="p">(</span><span class="n">conv_4_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Sixth convolution (dense bottleneck) (9x9x256 -&gt; 9x9x512)</span>
+        <span class="n">conv_5_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_5</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span><span class="p">(</span><span class="n">downsample_4_output_type</span><span class="p">,</span> <span class="n">conv_5_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">)</span>
+
+        <span class="c1">#Now time to upscale! (9x9x512 -&gt; 18x18x256)</span>
+        <span class="n">upscale_1_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upscale_1</span><span class="p">,</span> <span class="n">upscale_1_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale</span><span class="p">(</span><span class="n">conv_5_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Reduce channels with 1x1 conv before concatenation (18x18x512 -&gt; 18x18x256)</span>
+        <span class="n">reduce_1a_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_1a</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_1_output_type</span><span class="p">,</span>
+                <span class="n">reduce_1a_output_type</span><span class="p">)</span>
+
+        <span class="c1">#1x1 conv block on concatenated inputs (18x18x512 -&gt; 18x18x128)</span>
+        <span class="n">reduce_1_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_1</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_1_output_type</span><span class="p">,</span>
+                <span class="n">reduce_1_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Dense block (18x18x128 -&gt; 18x18x256)</span>
+        <span class="n">conv_6_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_6</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span><span class="p">(</span><span class="n">reduce_1_output_type</span><span class="p">,</span> <span class="n">conv_6_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">)</span>
+
+        <span class="c1">#Repeat upscale, concat, conv, dense (18x18x256 -&gt; 36x36x128)</span>
+        <span class="n">upscale_2_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upscale_2</span><span class="p">,</span> <span class="n">upscale_2_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale</span><span class="p">(</span><span class="n">conv_6_output_type</span><span class="p">)</span>
+        <span class="n">reduce_2a_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_2a</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_2_output_type</span><span class="p">,</span>
+                <span class="n">reduce_2a_output_type</span><span class="p">)</span>
+        <span class="n">reduce_2_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_2</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_2_output_type</span><span class="p">,</span>
+                <span class="n">reduce_2_output_type</span><span class="p">)</span>
+        <span class="n">conv_7_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_7</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span><span class="p">(</span><span class="n">reduce_2_output_type</span><span class="p">,</span> <span class="n">conv_7_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">)</span>
+
+        <span class="c1">#Repeat upscale, concat, conv, dense (36x36x128 -&gt; 72x72x64)</span>
+        <span class="n">upscale_3_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upscale_3</span><span class="p">,</span> <span class="n">upscale_3_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale</span><span class="p">(</span><span class="n">conv_7_output_type</span><span class="p">)</span>
+        <span class="n">reduce_3a_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_3a</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_3_output_type</span><span class="p">,</span>
+                <span class="n">reduce_3a_output_type</span><span class="p">)</span>
+        <span class="n">reduce_3_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_3</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_3_output_type</span><span class="p">,</span>
+                <span class="n">reduce_3_output_type</span><span class="p">)</span>
+        <span class="n">conv_8_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_8</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span><span class="p">(</span><span class="n">reduce_3_output_type</span><span class="p">,</span> <span class="n">conv_8_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">)</span>
+
+        <span class="c1">#Repeat upscale, concat, conv, dense (72x72x64 -&gt; 144x144x32)</span>
+        <span class="n">upscale_4_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upscale_4</span><span class="p">,</span> <span class="n">upscale_4_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale</span><span class="p">(</span><span class="n">conv_8_output_type</span><span class="p">)</span>
+        <span class="n">reduce_4_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_4</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">upscale_4_output_type</span><span class="p">,</span>
+                <span class="n">reduce_4_output_type</span><span class="p">)</span>
+        <span class="n">conv_9_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_9</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span><span class="p">(</span><span class="n">reduce_4_output_type</span><span class="p">,</span> <span class="n">conv_9_output_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">has_bias</span><span class="o">=</span><span class="n">has_bias</span><span class="p">)</span>
+
+        <span class="c1">#Final output (1x1 conv to go to 144x144x1, then group pooling)</span>
+        <span class="n">final_output_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_invariant_input_type</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_reduce_block</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span><span class="p">(</span><span class="n">conv_9_output_type</span><span class="p">,</span> <span class="n">final_output_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_pool_block</span> <span class="o">=</span> <span class="n">InteroperableGroupPooling</span><span class="p">(</span><span class="n">final_output_type</span><span class="p">)</span>
+
+        <span class="c1">#Normal torch block (not group invariant) for final 1x1 conv/BN/Relu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plain_torch_block</span> <span class="o">=</span> <span class="n">ActivationBlock</span><span class="p">(</span><span class="n">relu_slope</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+        <span class="c1">#Dictionary mapping sub-blocks to types (for loading/saving from dictionaries)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;input_conv_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;conv_block_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;conv_block_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;conv_block_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;conv_block_4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;conv_block_5&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;conv_block_6&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;conv_block_7&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;conv_block_8&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;conv_block_9&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TwoStepConvBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;downsample_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DownscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;downsample_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DownscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;downsample_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DownscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;downsample_4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DownscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;upscale_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">UpscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;upscale_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">UpscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;upscale_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">UpscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;upscale_4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">UpscaleBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_1a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_2a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_3a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;reduce_4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;group_reduce_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ReduceChannelDimsBlock</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;group_pool_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">InteroperableGroupPooling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_blocks</span><span class="p">[</span><span class="s1">&#39;plain_torch_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ActivationBlock</span>
+
+        <span class="c1">#Save to dict + then reload to ensure that all fields are initialized</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reload_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_save_dict</span><span class="p">())</span>
+
+<div class="viewcode-block" id="NonDenseC8InvariantCNN.forward"><a class="viewcode-back" href="../index.html#c8_invariant_cnn.NonDenseC8InvariantCNN.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_tensor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function runs the C8 invariant CNN forwards.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            input_tensor: torch.Tensor</span>
+<span class="sd">                RGB+IR images to put in the model</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            output_tensor: torch.tensor</span>
+<span class="sd">                cloud map</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Transform input into C8-invariant GeometricTensor</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">GeometricTensor</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_type</span><span class="p">)</span>
+
+        <span class="c1">#Ingest layer</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x16</span>
+
+        <span class="c1">#Repeatedly downscale</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x32</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x32</span>
+
+        <span class="n">x_cat_72x72</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x64</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_2</span><span class="p">(</span><span class="n">x_cat_72x72</span><span class="p">)</span> <span class="c1">#36x36x64</span>
+
+        <span class="n">x_cat_36x36</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#36x36x128</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_3</span><span class="p">(</span><span class="n">x_cat_36x36</span><span class="p">)</span> <span class="c1">#18x18x128</span>
+
+        <span class="n">x_cat_18x18</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_4</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#18x18x256</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_4</span><span class="p">(</span><span class="n">x_cat_18x18</span><span class="p">)</span> <span class="c1">#9x9x256</span>
+
+        <span class="c1">#Bottleneck layer</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_5</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#9x9x512</span>
+
+        <span class="c1">#Repeatedly upscale</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#18x18x512</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_1a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#18x18x256</span>
+
+        <span class="c1">#Important note: concatenations happen in dimension 1</span>
+        <span class="c1">#because GeometricTensors have shape (inv_rep, channels, x, y)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">tensor_directsum</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x_cat_18x18</span><span class="p">])</span> <span class="c1">#18x18x512</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#18x18x128</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_6</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#18x18x256</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#36x36x256</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_2a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#36x36x128</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">tensor_directsum</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x_cat_36x36</span><span class="p">])</span> <span class="c1">#36x36x256</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#36x36x64</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_7</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#36x36x128</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale_3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x128</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_3a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x64</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">tensor_directsum</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x_cat_72x72</span><span class="p">])</span> <span class="c1">#72x72x128</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x32</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_8</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#72x72x64</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale_4</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x64</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_4</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x16</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_block_9</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x32</span>
+
+        <span class="c1">#Final C8-invariant layer (goes to torch.tensor)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_reduce_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x1</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_pool_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x1 torch.tensor</span>
+
+        <span class="c1">#Final torch layer</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">tensor</span> <span class="c1">#Unwrap GeometricTensor to get PyTorch tensor</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plain_torch_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">#144x144x1 torch.tensor</span>
+
+        <span class="k">return</span> <span class="n">x</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">SM Thesis 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">c8_invariant_cnn</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Alex Meredith.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>

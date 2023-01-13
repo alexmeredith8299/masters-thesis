@@ -1,0 +1,493 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>escnn_extension &#8212; SM Thesis 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">SM Thesis 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">escnn_extension</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for escnn_extension</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module extends some commonly used modules from the escnn library</span>
+<span class="sd">to be savable and loadable from files.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">e2cnn</span> <span class="kn">import</span> <span class="n">gspaces</span><span class="p">,</span> <span class="n">nn</span>
+
+<div class="viewcode-block" id="InteroperableGroupPooling"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableGroupPooling">[docs]</a><span class="k">class</span> <span class="nc">InteroperableGroupPooling</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">GroupPooling</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This module extends escnn.nn.GroupPooling to be easily saved + loaded from disk.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="InteroperableGroupPooling.get_save_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableGroupPooling.get_save_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method saves all relevant properties of the InteroperableGroupPooling module</span>
+<span class="sd">        in a dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties in dict</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                contains properties to save to disk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1">#Save vals from state dict</span>
+        <span class="n">state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="c1">#Save in/out type</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.in_channels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_type</span><span class="o">.</span><span class="n">size</span>
+
+        <span class="k">return</span> <span class="n">properties</span></div>
+
+<div class="viewcode-block" id="InteroperableGroupPooling.load_from_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableGroupPooling.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method loads an InteroperableGroupPooling module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary of properties for module</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            gp_module: InteroperableGroupPooling</span>
+<span class="sd">                module implementing those properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Get prefix and # of input channels</span>
+        <span class="n">in_channels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">key</span> <span class="ow">and</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;in_channels&#39;</span><span class="p">:</span>
+                <span class="n">in_channels</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1">#Get input type and output type</span>
+        <span class="n">r2_act</span> <span class="o">=</span> <span class="n">gspaces</span><span class="o">.</span><span class="n">Rot2dOnR2</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">r2_act</span><span class="p">,</span> <span class="n">in_channels</span><span class="o">*</span><span class="p">[</span><span class="n">r2_act</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+
+        <span class="n">gp_module</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">in_type</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;in_channels&#39;</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">gp_module</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.split(&#39;.&#39;)[-1]&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">gp_module</span></div></div>
+
+<div class="viewcode-block" id="InteroperableUpsample"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableUpsample">[docs]</a><span class="k">class</span> <span class="nc">InteroperableUpsample</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">R2Upsampling</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This module extends escnn.nn.R2Upsampling to be easily saved + loaded from disk.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="InteroperableUpsample.get_save_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableUpsample.get_save_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method saves all relevant properties of the InteroperableUpsample in a</span>
+<span class="sd">        dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties in dict</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                contains properties to save to disk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1">#Save properties</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.channels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_type</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.scale_factor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_factor</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.mode&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.align_corners&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_align_corners</span>
+
+        <span class="k">return</span> <span class="n">properties</span></div>
+
+<div class="viewcode-block" id="InteroperableUpsample.load_from_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableUpsample.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method loads an InteroperableUpsample module from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary of properties for module</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            ups_module: InteroperableUpsample</span>
+<span class="sd">                module implementing those properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Get prefix</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;mode&#39;</span><span class="p">:</span>
+                <span class="n">prefix_keys</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prefix_keys</span><span class="p">)</span>
+
+        <span class="c1">#Get properties</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.channels&quot;</span><span class="p">]</span>
+        <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.scale_factor&quot;</span><span class="p">]</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.mode&quot;</span><span class="p">]</span>
+        <span class="n">align_corners</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.align_corners&quot;</span><span class="p">]</span>
+
+        <span class="c1">#Get input type</span>
+        <span class="n">r2_act</span> <span class="o">=</span> <span class="n">gspaces</span><span class="o">.</span><span class="n">Rot2dOnR2</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">r2_act</span><span class="p">,</span> <span class="n">channels</span><span class="o">*</span><span class="p">[</span><span class="n">r2_act</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+
+        <span class="c1">#Initialize + return</span>
+        <span class="n">ups_module</span> <span class="o">=</span> <span class="n">InteroperableUpsample</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="n">scale_factor</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="n">align_corners</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ups_module</span></div></div>
+
+<div class="viewcode-block" id="InteroperableMaxBlurPool"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableMaxBlurPool">[docs]</a><span class="k">class</span> <span class="nc">InteroperableMaxBlurPool</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">PointwiseMaxPoolAntialiased</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This module extends escnn.nn.PointwiseMaxPoolAntialiased to be easily saved + loaded</span>
+<span class="sd">    from disk.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="InteroperableMaxBlurPool.get_save_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableMaxBlurPool.get_save_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method saves all relevant properties of the InteroperableMaxBlurPool to a</span>
+<span class="sd">        state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties in dict</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                contains properties to save to disk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1">#Save properties</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.filter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.kernel_size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#Assume square kernel</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.padding&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#Assume square padding</span>
+
+        <span class="c1">#Return</span>
+        <span class="k">return</span> <span class="n">properties</span></div>
+
+<div class="viewcode-block" id="InteroperableMaxBlurPool.load_from_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableMaxBlurPool.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method loads an InteroperableMaxBlurPool from a state dictionary containing</span>
+<span class="sd">        a filter, input type, kernel size, and padding information.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                contains properties to load</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            pool_module: InteroperableMaxBlurPool</span>
+<span class="sd">                module that shares properties from dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Get prefix</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;filter&#39;</span><span class="p">:</span>
+                <span class="n">prefix_keys</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prefix_keys</span><span class="p">)</span>
+
+        <span class="n">filter_tensor</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.filter&#39;</span><span class="p">]</span>
+        <span class="n">kernel_size</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.kernel_size&#39;</span><span class="p">]</span>
+        <span class="n">padding</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.padding&#39;</span><span class="p">]</span>
+
+        <span class="c1">#Get input type</span>
+        <span class="n">r2_act</span> <span class="o">=</span> <span class="n">gspaces</span><span class="o">.</span><span class="n">Rot2dOnR2</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">r2_act</span><span class="p">,</span> <span class="n">filter_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">[</span><span class="n">r2_act</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+
+        <span class="n">pool_module</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">)</span>
+        <span class="n">pool_module</span><span class="o">.</span><span class="n">filter</span> <span class="o">=</span> <span class="n">filter_tensor</span>
+
+        <span class="k">return</span> <span class="n">pool_module</span></div></div>
+
+<div class="viewcode-block" id="InteroperableReLU"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableReLU">[docs]</a><span class="k">class</span> <span class="nc">InteroperableReLU</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This module extends escnn.nn.ReLU to be easily saved + loaded from disk.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="InteroperableReLU.get_save_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableReLU.get_save_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method saves an InteroperableReLU block to a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        -----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary with properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.channels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_type</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.inplace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inplace</span>
+        <span class="k">return</span> <span class="n">properties</span></div>
+
+<div class="viewcode-block" id="InteroperableReLU.load_from_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableReLU.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method loads an InteroperableReLU block from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                properties for ReLU block</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            relu_module: InteroperableReLU</span>
+<span class="sd">                ReLU block implementing properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Get properties</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">inplace</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s1">&#39;channels&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">channels</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;inplace&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">inplace</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1">#Get input type</span>
+        <span class="n">r2_act</span> <span class="o">=</span> <span class="n">gspaces</span><span class="o">.</span><span class="n">Rot2dOnR2</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">r2_act</span><span class="p">,</span> <span class="n">channels</span><span class="o">*</span><span class="p">[</span><span class="n">r2_act</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+
+        <span class="n">relu_module</span> <span class="o">=</span> <span class="n">InteroperableReLU</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">relu_module</span></div></div>
+
+<div class="viewcode-block" id="InteroperableBatchNorm"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableBatchNorm">[docs]</a><span class="k">class</span> <span class="nc">InteroperableBatchNorm</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">InnerBatchNorm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This module extends escnn.nn.InnerBatchNorm to be easily saved + loaded from disk.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="InteroperableBatchNorm.get_save_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableBatchNorm.get_save_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method saves an InteroperableBatchNorm block to a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            prefix: string (optional)</span>
+<span class="sd">                prefix for properties</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary with properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">prefix</span><span class="o">==</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+        <span class="n">state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">properties</span></div>
+
+<div class="viewcode-block" id="InteroperableBatchNorm.load_from_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableBatchNorm.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method loads an InteroperableBatchNorm block from a state dictionary.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                contains properties to load</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">            bn_module: InteroperableBatchNorm</span>
+<span class="sd">                module that shares properties from dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Get input size (assume all channels contiguous)</span>
+        <span class="n">weight_shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">key</span> <span class="ow">and</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;weight&#39;</span><span class="p">:</span>
+                <span class="n">weight_shape</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1">#Get input type and output type</span>
+        <span class="n">r2_act</span> <span class="o">=</span> <span class="n">gspaces</span><span class="o">.</span><span class="n">Rot2dOnR2</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">r2_act</span><span class="p">,</span> <span class="n">weight_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">[</span><span class="n">r2_act</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+
+        <span class="c1">#Initialize</span>
+        <span class="n">bn_module</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">in_type</span><span class="p">)</span>
+
+        <span class="c1">#Add properties (assume all channels contiguous)</span>
+        <span class="n">batch_norm</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">bn_module</span><span class="p">,</span> <span class="s1">&#39;batch_norm_[</span><span class="si">{}</span><span class="s1">]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">batch_norm</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span> <span class="c1">#Update weights</span>
+
+        <span class="c1">#Update properties (assuming all channels contiguous)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">old_key</span> <span class="o">=</span> <span class="n">key</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="c1">#Only require grad for bias, weight</span>
+                <span class="n">requires_grad</span> <span class="o">=</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;num_batches_tracked&quot;</span>
+                <span class="n">requires_grad</span> <span class="o">=</span> <span class="n">requires_grad</span> <span class="ow">and</span> <span class="s2">&quot;running&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">key</span>
+                <span class="n">requires_grad</span> <span class="o">=</span> <span class="n">requires_grad</span> <span class="ow">and</span> <span class="s2">&quot;indices&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">key</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">batch_norm</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">properties</span><span class="p">[</span><span class="n">old_key</span><span class="p">],</span>
+                    <span class="n">requires_grad</span><span class="o">=</span><span class="n">requires_grad</span><span class="p">))</span>
+
+        <span class="c1">#Update attribute and return</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">bn_module</span><span class="p">,</span> <span class="s1">&#39;batch_norm_[</span><span class="si">{}</span><span class="s1">]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">batch_norm</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">bn_module</span></div></div>
+
+<div class="viewcode-block" id="InteroperableR2Conv"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableR2Conv">[docs]</a><span class="k">class</span> <span class="nc">InteroperableR2Conv</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">R2Conv</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This module extends escnn.nn.R2Conv to be easily saved + loaded from disk.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="InteroperableR2Conv.get_save_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableR2Conv.get_save_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_save_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method gets a dictionary with key properties to save in a pickleable format.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            prefix: string</span>
+<span class="sd">                prefix for properties in dict</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary with properties to save</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Create properties dict and save weights/bias</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.weights&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.filter&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">}</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.bias&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.expanded_bias&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expanded_bias</span>
+
+        <span class="c1">#Save padding info</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.padding&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding</span>
+        <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">.padding_mode&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_mode</span>
+
+        <span class="k">return</span> <span class="n">properties</span></div>
+
+
+<div class="viewcode-block" id="InteroperableR2Conv.load_from_dict"><a class="viewcode-back" href="../index.html#escnn_extension.InteroperableR2Conv.load_from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method loads an InteroperableR2Conv module from a dictionary of properties.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ----------</span>
+<span class="sd">            properties: dict</span>
+<span class="sd">                dictionary with properties to load</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">           eq_module: InteroperableR2Conv</span>
+<span class="sd">                new module with loaded properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#Filter size = channels out, channels in, kernel size</span>
+        <span class="n">filter_shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;filter&#39;</span><span class="p">:</span>
+                <span class="n">filter_shape</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+                <span class="n">prefix_keys</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prefix_keys</span><span class="p">)</span>
+
+        <span class="c1">#Get input type and output type</span>
+        <span class="n">r2_act</span> <span class="o">=</span> <span class="n">gspaces</span><span class="o">.</span><span class="n">Rot2dOnR2</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">in_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">r2_act</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">[</span><span class="n">r2_act</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+        <span class="n">out_type</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">FieldType</span><span class="p">(</span><span class="n">r2_act</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">[</span><span class="n">r2_act</span><span class="o">.</span><span class="n">trivial_repr</span><span class="p">])</span>
+
+        <span class="c1">#Get kernel size and padding</span>
+        <span class="n">kernel_size</span> <span class="o">=</span> <span class="n">filter_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">padding</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.padding&#39;</span><span class="p">]</span>
+        <span class="n">padding_mode</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.padding_mode&#39;</span><span class="p">]</span>
+
+        <span class="c1">#Create new InteroperableR2Conv</span>
+        <span class="n">eq_module</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">out_type</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span> <span class="n">padding_mode</span><span class="o">=</span><span class="n">padding_mode</span><span class="p">)</span>
+
+        <span class="c1">#Update bias (if necessary)</span>
+        <span class="k">if</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.expanded_bias&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">eq_module</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.bias&#39;</span><span class="p">]</span> 
+            <span class="n">eq_module</span><span class="o">.</span><span class="n">expanded_bias</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.expanded_bias&#39;</span><span class="p">]</span>
+
+        <span class="c1">#Update filter + weights</span>
+        <span class="n">eq_module</span><span class="o">.</span><span class="n">filter</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.filter&#39;</span><span class="p">]</span>
+        <span class="n">eq_module</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s1">.weights&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">eq_module</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">SM Thesis 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">escnn_extension</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Alex Meredith.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>
